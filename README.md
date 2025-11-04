@@ -1,6 +1,10 @@
-# Caribbean Interactive Map
+# PiratesIRC Interactive Map
 
-An interactive web-based map visualization of the Caribbean region, featuring zoomable/pannable navigation, ports, ships, and a detailed terrain classification system.
+An interactive web-based map visualization for the game PiratesIRC, featuring zoomable/pannable navigation, ports, ships, and a detailed terrain classification system.
+
+## Live View
+
+View the live map at: **https://piratesirc.github.io/PiratesIRC-Map/**
 
 ## Features
 
@@ -32,8 +36,8 @@ An interactive web-based map visualization of the Caribbean region, featuring zo
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/caribbean-map.git
-cd caribbean-map
+git clone https://github.com/PiratesIRC/PiratesIRC-Map.git
+cd PiratesIRC-Map
 ```
 
 2. Start the development server:
@@ -139,7 +143,7 @@ python tool/scan-map.py
 
 ## Grid Coordinate System
 
-### Map Coverage
+### PiratesIRC Game Map Coverage
 - **Latitude**: 30°N (top) to 14°N (bottom)
 - **Longitude**: 98°W (left) to 62°W (right)
 
@@ -172,7 +176,7 @@ python tool/scan-map.py
 ## Project Structure
 
 ```
-caribbean-map/
+PiratesIRC-Map/
 ├── index.html              # Main map viewer
 ├── map-editor.html         # Terrain editor
 ├── script.js               # Main viewer logic
@@ -183,7 +187,7 @@ caribbean-map/
 ├── terrain.json            # Terrain classifications
 ├── grid.json               # Grid configuration
 ├── images/
-│   ├── map.jpg            # Caribbean map image
+│   ├── map.jpg            # PiratesIRC game map image
 │   └── *.png              # Entity icons
 └── tool/
     └── scan-map.py        # Terrain analysis script
@@ -231,5 +235,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Map imagery of the Caribbean region
+- Map imagery for the PiratesIRC game
 - Icon assets for ships and factions
