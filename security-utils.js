@@ -57,8 +57,8 @@ function sanitizeFaction(faction) {
 
     // List of allowed factions
     const allowedFactions = [
-        'england', 'france', 'spain', 'pirate',
-        'infected', 'native', 'jesuit', 'independent'
+        'england', 'france', 'spain', 'dutch', 'netherlands',
+        'pirate', 'infected', 'native', 'jesuit', 'independent'
     ];
 
     // Normalize and sanitize
