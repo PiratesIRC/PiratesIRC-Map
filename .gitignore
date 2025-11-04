@@ -1,0 +1,6 @@
+# Markdown files
+*.md
+
+# Windows batch files
+*.bat
+*.cmd

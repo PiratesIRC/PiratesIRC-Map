@@ -1,0 +1,513 @@
+/* Prevent page-level scrolling and define base layout */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* CRITICAL: Prevents all browser scrollbars */
+    background-color: #0c0a09; /* Dark background */
+    /* UPDATED FONT */
+    font-family: 'IM Fell English', serif;
+    color: #f0f0f0;
+}
+
+/* --- Sidebar Styles --- */
+.sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: #1a1a1a;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- NEW: Tab Styles --- */
+.sidebar-tabs {
+    display: flex;
+    width: 100%;
+}
+.tab-btn {
+    flex: 1;
+    padding: 15px;
+    background-color: #2a2a2a;
+    border: none;
+    border-bottom: 3px solid #2a2a2a;
+    color: #888;
+    font-size: 1.1em; /* Slightly larger for new font */
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    /* Apply new font */
+    font-family: 'IM Fell English', serif;
+}
+.tab-btn:hover {
+    background-color: #333;
+}
+.tab-btn.active {
+    background-color: #1a1a1a;
+    color: #fff;
+    border-bottom-color: #ffd700;
+}
+/* --- End Tab Styles --- */
+
+.last-updated {
+    font-size: 0.85em;
+    color: #888;
+    text-align: center;
+    padding: 5px 0;
+    margin: 0;
+    border-bottom: 1px solid #333;
+}
+
+/* --- NEW: Tab Content Styles --- */
+.tab-content {
+    display: none; /* Hidden by default */
+    flex-grow: 1;
+    overflow-y: auto;
+}
+.tab-content.active {
+    display: block; /* Shown when active */
+}
+/* --- End Tab Content Styles --- */
+
+.port-list {
+    /* This class is now used by both lists */
+    flex-grow: 1;
+}
+
+.port-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s ease;
+    font-size: 1.1em; /* Slightly larger for new font */
+}
+
+.port-item:hover {
+    background-color: #2c2c2c;
+}
+
+.port-item .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.port-item svg.sidebar-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.port-item svg.sidebar-icon path {
+    /* Faction colors will be applied via classes below */
+}
+
+.port-item img {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    flex-shrink: 0;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+
+
+
+/* --- Map Viewport & Container --- */
+.map-viewport {
+    position: absolute;
+    left: 250px;
+    top: 0;
+    width: calc(100vw - 250px);
+    height: 100vh;
+    overflow: hidden;
+    cursor: grab;
+}
+
+.map-viewport.is-dragging {
+    cursor: grabbing;
+}
+
+.map-container {
+    position: absolute;
+    width: 3840px;
+    height: 2498px;
+    transform-origin: 0 0;
+}
+
+.map-container.is-transitioning {
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.map-container img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* --- Point Styles (Ports) --- */
+.map-point {
+    position: absolute;
+    cursor: pointer;
+    /* transform is set by JS */
+    transition: all 0.2s ease;
+    pointer-events: all;
+    z-index: 10;
+}
+
+.map-point .map-icon {
+    /* This is the SVG icon */
+    width: 30px;
+    height: 30px;
+    /* UPDATED: Stroke now inherits fill color (faction color) */
+    stroke: currentColor;
+    stroke-width: 3px;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.7));
+    transition: all 0.2s ease;
+    transform-origin: center center;
+    /* Fill and stroke color are applied by faction classes */
+}
+
+.map-point:hover {
+     /* transform is handled by JS */
+}
+.map-point.highlighted {
+    /* transform is handled by JS */
+    z-index: 11;
+}
+
+.map-point.highlighted .map-icon {
+    filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 15px #0ff);
+    stroke: #00ffff;
+    stroke-width: 2px; /* Thinner highlight stroke */
+}
+
+/* --- NEW: Entity Styles (Ships, Storms) --- */
+.map-entity {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+    pointer-events: all;
+}
+.map-entity img {
+    /* UPDATED: Reverted to smaller base size */
+    width: 32px; 
+    height: 32px;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.7));
+    transition: all 0.2s ease;
+}
+.map-entity:hover {
+    /* transform is handled by JS */
+    z-index: 11;
+}
+.map-entity.highlighted {
+    /* transform is handled by JS */
+    z-index: 11;
+}
+.map-entity.highlighted img {
+    filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 15px #0ff);
+}
+/* --- End Entity Styles --- */
+
+/* --- NEW: Grid Label Styles --- */
+.map-grid-label {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    /* UPDATED: Reverted to smaller base font size */
+    font-size: 24px; 
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.5); /* Semi-transparent white */
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+    pointer-events: none; /* Labels are not interactive */
+    user-select: none;
+    z-index: 5; /* Behind ports and entities */
+}
+/* --- End Grid Label Styles --- */
+
+/* --- NEW: Grid Line Styles --- */
+.map-grid-line {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.2); /* Faint white */
+    pointer-events: none;
+    user-select: none;
+    z-index: 6; /* Above labels, below ports */
+}
+
+.map-grid-line.vertical-line {
+    width: 1px;
+    /* height is set by JS */
+    /* top is set by JS */
+}
+
+.map-grid-line.horizontal-line {
+    height: 1px;
+    /* width is set by JS */
+    /* left is set by JS */
+}
+/* --- End Grid Line Styles --- */
+
+
+/* Faction colors using background-color */
+.spanish .map-icon { fill: #ffff00; stroke: #ffff00; stroke-width: 3px; }
+.spain .map-icon { fill: #ffff00; stroke: #ffff00; stroke-width: 3px; }
+.english .map-icon { fill: #ff0000; stroke: #ff0000; stroke-width: 3px; }
+.england .map-icon { fill: #ff0000; stroke: #ff0000; stroke-width: 3px; }
+.dutch .map-icon { fill: #90ee90; stroke: #90ee90; stroke-width: 3px; }
+.netherlands .map-icon { fill: #90ee90; stroke: #90ee90; stroke-width: 3px; }
+.independent .map-icon { fill: #ffffff; stroke: #ff00e7; stroke-width: 3px; }
+.french .map-icon { fill: #0000ff; stroke: #0000ff; stroke-width: 3px; }
+.france .map-icon { fill: #0000ff; stroke: #0000ff; stroke-width: 3px; }
+.pirate .map-icon { fill: #ffffff; stroke: #ffffff; stroke-width: 15px; }
+.native .map-icon { fill: #e09300; stroke: #e09300; stroke-width: 4px; }
+.jesuit .map-icon { fill: #ffffff; stroke: #0082ff; stroke-width: 4px; }
+.infected .map-icon { fill: #ff0000; stroke: #ff0000; stroke-width: 4px; }
+
+/* Sidebar icon colors */
+.sidebar-icon.spanish path { fill: #ffff00; stroke: #ffff00; }
+.sidebar-icon.spain path { fill: #ffff00; stroke: #ffff00; }
+.sidebar-icon.english path { fill: #ff0000; stroke: #ff0000; }
+.sidebar-icon.england path { fill: #ff0000; stroke: #ff0000; }
+.sidebar-icon.dutch path { fill: #90ee90; stroke: #90ee90; }
+.sidebar-icon.netherlands path { fill: #90ee90; stroke: #90ee90; }
+.sidebar-icon.independent path { fill: #ffffff; stroke: #ff00e7; stroke-width: 2px; }
+.sidebar-icon.french path { fill: #0000ff; stroke: #0000ff; }
+.sidebar-icon.france path { fill: #0000ff; stroke: #0000ff; }
+.sidebar-icon.pirate path { fill: #ffffff; stroke: #ffffff; }
+.sidebar-icon.native path { fill: #D2691E; stroke: #D2691E; }
+.sidebar-icon.jesuit path { fill: #ffffff; stroke: #0082ff; stroke-width: 2px; }
+.sidebar-icon.infected path { fill: #ff0000; stroke: #ff0000; }
+
+.dot.spanish { background-color: #ffff00; }
+.dot.spain { background-color: #ffff00; }
+.dot.english { background-color: #ff0000; }
+.dot.england { background-color: #ff0000; }
+.dot.dutch { background-color: #90ee90; }
+.dot.netherlands { background-color: #90ee90; }
+.dot.independent { background-color: #ff00ff; }
+.dot.french { background-color: #0000ff; }
+.dot.france { background-color: #0000ff; }
+.dot.pirate { background-color: #ffffff; }
+.dot.native { background-color: #D2691E; }
+.dot.jesuit { background-color: #0082ff; }
+.dot.infected { background-color: #8B0000; }
+/* --- End Faction Colors --- */
+
+/* --- UI Controls --- */
+.map-ui-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: flex-end;
+    z-index: 21;
+}
+
+.pan-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.pan-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    color: #333;
+    line-height: 38px;
+}
+
+.pan-btn:hover { background-color: #fff; }
+.pan-btn:active { background-color: #eee; }
+
+.zoom-controls {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.zoom-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    margin-top: 5px;
+    line-height: 38px;
+    color: #333;
+}
+.zoom-btn:hover { background-color: #fff; }
+.zoom-btn:active { background-color: #eee; }
+
+/* --- Map Tooltip (now has fixed font size) --- */
+.map-tooltip {
+    position: absolute;
+    width: 200px;
+    background-color: #222;
+    border: 1px solid #555;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+    z-index: 12;
+    
+    /* transform is now set entirely by JS to include counter-scale */
+    
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    
+    pointer-events: none; 
+    
+    /* *** UPDATED: Set tooltip font *** */
+    font-family: 'Merriweather', serif;
+    font-size: 15px; /* Merriweather is readable at a smaller size */
+    line-height: 1.4;
+    
+    /* UPDATED: Tooltip must have transform-origin for counter-scaling */
+    transform-origin: 0 0; 
+}
+
+.map-tooltip h4 {
+    margin: 0 0 5px 0;
+    color: #ffd700;
+    font-size: 1.2em; 
+    font-weight: 700;
+}
+
+.map-tooltip p {
+    margin: 0;
+    font-size: 1em; 
+    font-weight: 400;
+    color: #ccc;
+}
+/* --- Coordinate Tooltip Styles --- */
+.coordinate-tooltip {
+    position: absolute;
+    background-color: rgba(34, 34, 34, 0.95);
+    border: 2px solid #ffd700;
+    border-radius: 4px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    z-index: 13;
+    
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    
+    pointer-events: none;
+    
+    font-family: 'Merriweather', serif;
+    
+    transform-origin: 0 0;
+    white-space: nowrap;
+}
+
+.coordinate-tooltip .coord-main {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffd700;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+    margin-bottom: 4px;
+}
+
+.coordinate-tooltip .coord-latlon {
+    font-size: 13px;
+    font-weight: 400;
+    color: #aaa;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.9);
+}
+
+.coordinate-tooltip .coord-terrain {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6cf;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.9);
+    margin-top: 4px;
+    text-transform: capitalize;
+}
+
+/* --- Sub-Grid Line Styles --- */
+.sub-grid-line {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.1) !important; /* Fainter than major grid */
+}
+
+.major-grid {
+    /* Major grid lines remain at default opacity */
+}
+
+/* --- Zoom Level Display --- */
+.zoom-level-display {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #ffd700;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 5px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    min-width: 60px;
+}
+
+/* Map tooltip coordinates section */
+.map-tooltip .tooltip-coordinates {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #444;
+}
+
+.map-tooltip .tooltip-grid {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #6cf;
+    margin-bottom: 3px;
+}
+
+.map-tooltip .tooltip-latlon {
+    font-size: 0.85em;
+    font-weight: 400;
+    color: #999;
+}
+
+/* Entity image in tooltip */
+.map-tooltip .tooltip-image {
+    text-align: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+}
+
+.map-tooltip .tooltip-image img {
+    max-width: 100%;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    display: inline-block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}

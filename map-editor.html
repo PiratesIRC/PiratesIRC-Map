@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Map Terrain Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+
+    <div class="editor-container">
+        <div class="map-viewport" id="map-viewport">
+            <div class="map-container" id="map-container">
+                <img src="images/map.jpg" alt="Map of the Caribbean">
+                <div class="coordinate-tooltip" id="coordinate-tooltip"></div>
+            </div>
+            <div class="map-ui-controls">
+                <div class="pan-controls">
+                    <button class="pan-btn" id="pan-up-btn" title="Pan Up">&#8593;</button>
+                    <div>
+                        <button class="pan-btn" id="pan-left-btn" title="Pan Left">&#8592;</button>
+                        <button class="pan-btn" id="pan-right-btn" title="Pan Right">&#8594;</button>
+                    </div>
+                    <button class="pan-btn" id="pan-down-btn" title="Pan Down">&#8595;</button>
+                </div>
+                <div class="zoom-controls">
+                    <div class="zoom-level-display" id="zoom-level-display">1.0x</div>
+                    <button class="zoom-btn" id="zoom-in-btn" title="Zoom In (+)">+</button>
+                    <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out (-)">-</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="json-output-container">
+            <h3>Updated terrain.json</h3>
+            <p>Copy the content below and paste it into your `terrain.json` file.</p>
+            <textarea id="json-output" readonly></textarea>
+            <button id="copy-json-btn">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <div class="editor-popup" id="editor-popup">
+        <div id="popup-content"></div>
+        <div class="popup-buttons">
+            <button data-terrain="land">Land</button>
+            <button data-terrain="water">Water</button>
+            <button data-terrain="both">Both</button>
+        </div>
+    </div>
+
+    <div class="status-bar" id="status-bar">
+        Ready.
+    </div>
+
+    <script src="editor.js"></script>
+</body>
+</html>

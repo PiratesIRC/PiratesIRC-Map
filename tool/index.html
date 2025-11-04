@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-mF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Coordinate Picker</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <style>
+        /* Make the map fill the entire page */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+            background-color: #555; /* Fallback background */
+        }
+        
+        /* Style for the coordinate display box */
+        #coords {
+            position: absolute;
+            top: 10px;
+            left: 50px; /* Aligns with Leaflet zoom controls */
+            z-index: 1000; /* Sits on top of the map */
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            border: 1px solid #777;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="coords">Click on the map to get coordinates...</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <script>
+        // --- Image & Map Setup ---
+
+        // The dimensions of your image
+        const imgWidth = 3840;
+        const imgHeight = 2498;
+        const imageUrl = 'map.jpg';
+
+        // Get the coordinate display element
+        const coordsDiv = document.getElementById('coords');
+
+        // Initialize the map
+        // L.CRS.Simple makes the map use a simple (x, y) coordinate system
+        // instead of Earth's (latitude, longitude)
+        const map = L.map('map', {
+            crs: L.CRS.Simple,
+            minZoom: -5 // Allows zooming out far enough
+        });
+
+        // Define the image bounds.
+        // Leaflet's coordinate system (lat, lng) or (y, x)
+        // [minY, minX], [maxY, maxX]
+        const bounds = [[0, 0], [imgHeight, imgWidth]];
+
+        // Add the image as an overlay to the map
+        const image = L.imageOverlay(imageUrl, bounds).addTo(map);
+
+        // Fit the map to show the entire image on load
+        map.fitBounds(bounds);
+
+        // --- Click Event Handler ---
+
+        map.on('click', function(e) {
+            // e.latlng contains the (y, x) coordinates of the click
+            // in the map's coordinate system.
+            const clickLat = e.latlng.lat; // Leaflet's Y
+            const clickLon = e.latlng.lng; // Leaflet's X
+
+            // **Important**: Leaflet's L.CRS.Simple has its (0,0) origin
+            // at the BOTTOM-left, but image pixel (0,0) is at the TOP-left.
+            // So, we must "flip" the Y-coordinate.
+            
+            // X-pixel is a direct match
+            const pixelX = clickLon;
+            
+            // Y-pixel is inverted
+            const pixelY = imgHeight - clickLat;
+
+            // Ensure coordinates are within the image boundaries
+            if (pixelX < 0 || pixelX > imgWidth || pixelY < 0 || pixelY > imgHeight) {
+                coordsDiv.innerText = "Clicked outside map bounds.";
+                return;
+            }
+
+            // Format the coordinates as requested
+            // Using your labels: "lat" for Y, "lon" for X
+            const outputString = `"x": ${pixelX.toFixed(2)}, "y": ${pixelY.toFixed(2)},`;
+
+            // Copy the string to the clipboard
+            navigator.clipboard.writeText(outputString).then(() => {
+                // On success, update the display box with a "Copied!" message
+                coordsDiv.innerHTML = `<b>Copied to clipboard!</b><br>${outputString}`;
+            }).catch(err => {
+                // On failure, just show the coordinates
+                console.error('Failed to copy text: ', err);
+                coordsDiv.innerHTML = `<b>Could not copy.</b><br>${outputString}`;
+            });
+        });
+
+    </script>
+
+</body>
+</html>

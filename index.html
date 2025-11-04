@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Interactive Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" data-tab="ports">Ports</button>
+            <button class="tab-btn" data-tab="entities">Entities</button>
+        </div>
+        
+        <p class="last-updated">Last Updated: 10/26/2025</p>
+
+        <div class="tab-content active" id="ports-content">
+            <div class="port-list" id="port-list">
+                </div>
+        </div>
+        
+        <div class="tab-content" id="entities-content">
+            <div class="port-list" id="entity-list">
+                </div>
+        </div>
+
+    </div>
+
+    <div class="map-viewport" id="map-viewport">
+        <div class="map-container" id="map-container">
+            <img src="images/map.jpg" alt="Map of the Caribbean">
+            
+            <div class="map-tooltip" id="map-tooltip"></div>
+            <div class="coordinate-tooltip" id="coordinate-tooltip"></div>
+        </div>
+
+        <div class="map-ui-controls">
+            <div class="pan-controls">
+                <button class="pan-btn" id="pan-up-btn" title="Pan Up">&#8593;</button>
+                <div>
+                    <button class="pan-btn" id="pan-left-btn" title="Pan Left">&#8592;</button>
+                    <button class="pan-btn" id="pan-right-btn" title="Pan Right">&#8594;</button>
+                </div>
+                <button class="pan-btn" id="pan-down-btn" title="Pan Down">&#8595;</button>
+            </div>
+            <div class="zoom-controls">
+                <div class="zoom-level-display" id="zoom-level-display">1.0x</div>
+                <button class="zoom-btn" id="zoom-in-btn" title="Zoom In (+)">+</button>
+                <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out (-)">-</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=204"></script>
+</body>
+</html>

@@ -1,0 +1,728 @@
+/*
+    Enhanced Interactive Map with 5x5 Sub-Grid System
+    - Sub-grid lines appear only at max zoom (scale >= 4.5)
+    - Clicking the map displays coordinates in a tooltip
+    - Format: A1-3,2 (Major cell + column,row within cell)
+*/
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Get all UI elements
+    const mapViewport = document.getElementById('map-viewport');
+    const mapContainer = document.getElementById('map-container');
+    const zoomInBtn = document.getElementById('zoom-in-btn');
+    const zoomOutBtn = document.getElementById('zoom-out-btn');
+    const panUpBtn = document.getElementById('pan-up-btn');
+    const panDownBtn = document.getElementById('pan-down-btn');
+    const panLeftBtn = document.getElementById('pan-left-btn');
+    const panRightBtn = document.getElementById('pan-right-btn');
+    const mapTooltip = document.getElementById('map-tooltip');
+    const coordinateTooltip = document.getElementById('coordinate-tooltip');
+    const zoomLevelDisplay = document.getElementById('zoom-level-display');
+
+    // NEW: Sidebar and Tab elements
+    const portList = document.getElementById('port-list');
+    const entityList = document.getElementById('entity-list');
+    const tabs = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // --- Constants ---
+    const MAP_WIDTH = 3840;
+    const MAP_HEIGHT = 2498;
+    const SIDEBAR_WIDTH = 250;
+    const MIN_SCALE = 0.25;
+    const MAX_SCALE = 5;
+    const ZOOM_SPEED = 0.1;
+    const FOCUS_SCALE = 2.0;
+    const SUBGRID_ZOOM_THRESHOLD = 0.9; // Show sub-grid only at this zoom level
+    const PAN_AMOUNT = 100;
+
+    // Grid configuration
+    const GRID_COLS = 18;
+    const GRID_ROWS = 16;
+    const GRID_START_X = 60;
+    const GRID_START_Y = 60;
+    const CELL_WIDTH = MAP_WIDTH / GRID_COLS;
+    const CELL_HEIGHT = MAP_HEIGHT / 17; // Based on your original code
+    const SUBGRID_DIVISIONS = 5; // 5x5 sub-grid
+
+    // --- State Variables ---
+    let scale = 0.29;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let startX, startY;
+    
+    // Terrain data
+    let terrainData = {};
+
+    // --- Helper: Convert map coordinates to grid reference ---
+    function getGridReference(mapX, mapY) {
+        // Adjust for grid offset
+        const relX = mapX - GRID_START_X;
+        const relY = mapY - GRID_START_Y;
+
+        // Major cell
+        const majorCol = Math.floor(relX / CELL_WIDTH);
+        const majorRow = Math.floor(relY / CELL_HEIGHT);
+
+        // Check if within grid bounds
+        if (majorCol < 0 || majorCol >= GRID_COLS || majorRow < 0 || majorRow >= GRID_ROWS) {
+            return null;
+        }
+
+        // Position within the cell
+        const cellX = relX - (majorCol * CELL_WIDTH);
+        const cellY = relY - (majorRow * CELL_HEIGHT);
+
+        // Sub-grid position (1-5)
+        const subCol = Math.floor((cellX / CELL_WIDTH) * SUBGRID_DIVISIONS) + 1;
+        const subRow = Math.floor((cellY / CELL_HEIGHT) * SUBGRID_DIVISIONS) + 1;
+
+        // Convert to letter-number format (A-R for columns, 1-16 for rows)
+        const colLetter = String.fromCharCode(65 + majorCol); // A=65
+        const rowNumber = majorRow + 1;
+
+        // Calculate latitude and longitude
+        // Map covers: 30°N to 14°N (top to bottom) and 98°W to 62°W (left to right)
+        const LAT_TOP = 30;
+        const LAT_BOTTOM = 14;
+        const LON_LEFT = 98;
+        const LON_RIGHT = 62;
+        
+        // Calculate based on position relative to grid
+        const gridTotalHeight = GRID_ROWS * CELL_HEIGHT;
+        const gridTotalWidth = GRID_COLS * CELL_WIDTH;
+        
+        const latProgress = relY / gridTotalHeight; // 0 at top, 1 at bottom
+        const lonProgress = relX / gridTotalWidth; // 0 at left, 1 at right
+        
+        const latitude = LAT_TOP - (latProgress * (LAT_TOP - LAT_BOTTOM));
+        const longitude = LON_LEFT - (lonProgress * (LON_LEFT - LON_RIGHT));
+
+        // Build the terrain coordinate key
+        const finalSubCol = Math.min(subCol, SUBGRID_DIVISIONS);
+        const finalSubRow = Math.min(subRow, SUBGRID_DIVISIONS);
+        const terrainKey = `${colLetter}${rowNumber}-${finalSubCol}-${finalSubRow}`;
+        const terrain = terrainData[terrainKey] || 'unknown';
+
+        return {
+            major: `${colLetter}${rowNumber}`,
+            sub: `${finalSubCol}-${finalSubRow}`,
+            full: `${colLetter}${rowNumber}-${finalSubCol}-${finalSubRow}`,
+            latitude: latitude.toFixed(2),
+            longitude: longitude.toFixed(2),
+            terrain: terrain
+        };
+    }
+
+    // --- 1. Map Tooltip Functions ---
+
+    function showMapTooltip(tooltipData, targetPoint) {
+        // Get the map coordinates of the target point
+        const rect = targetPoint.getBoundingClientRect();
+        const containerRect = mapContainer.getBoundingClientRect();
+        const pointCenterX = rect.left + (rect.width / 2) - containerRect.left;
+        const pointCenterY = rect.top + (rect.height / 2) - containerRect.top;
+
+        const mapX = (pointCenterX) / scale;
+        const mapY = (pointCenterY) / scale;
+
+        // Get grid reference for this location
+        const gridRef = getGridReference(mapX, mapY);
+        
+        // Build tooltip HTML with coordinates
+        let tooltipHTML = '';
+        
+        // Add entity image if present
+        if (tooltipData.image) {
+            tooltipHTML += `
+                <div class="tooltip-image">
+                    <img src="images/${tooltipData.image}" alt="${tooltipData.title}">
+                </div>
+            `;
+        }
+        
+        tooltipHTML += `
+            <h4>${tooltipData.title} ${tooltipData.subtitle ? `(${tooltipData.subtitle})` : ''}</h4>
+            <p>${tooltipData.description}</p>
+        `;
+        
+        if (gridRef) {
+            tooltipHTML += `
+                <div class="tooltip-coordinates">
+                    <div class="tooltip-grid">${gridRef.full}</div>
+                    <div class="tooltip-latlon">${gridRef.latitude}°N, ${gridRef.longitude}°W</div>
+                </div>
+            `;
+        }
+        
+        mapTooltip.innerHTML = tooltipHTML;
+
+        const tooltipWidth = 200;
+        const tooltipHeight = mapTooltip.offsetHeight || 100;
+
+        mapTooltip.style.left = mapX + 'px';
+        mapTooltip.style.top = mapY + 'px';
+
+        const viewportLeft = SIDEBAR_WIDTH;
+        const viewportRight = window.innerWidth;
+        const viewportTop = 0;
+        const viewportBottom = window.innerHeight;
+
+        const pointCenterX_screen = rect.left + (rect.width / 2);
+        const pointCenterY_screen = rect.top + (rect.height / 2);
+
+        const tooltipXOffset_screen = 15;
+        const tooltipXOffset_map = tooltipXOffset_screen / scale;
+        const tooltipWidth_map = tooltipWidth / scale;
+
+        let finalXOffset = tooltipXOffset_map;
+
+        if (pointCenterX_screen + tooltipXOffset_screen + tooltipWidth > viewportRight) {
+            finalXOffset = -tooltipXOffset_map - tooltipWidth_map;
+        }
+
+        let finalYOffset = -50;
+
+        if (pointCenterY_screen + (tooltipHeight / 2) > viewportBottom) {
+            finalYOffset = -100;
+        }
+        else if (pointCenterY_screen - (tooltipHeight / 2) < viewportTop) {
+            finalYOffset = 0;
+        }
+
+        mapTooltip.style.transform = `translate(${finalXOffset}px, ${finalYOffset}%) scale(${1 / scale})`;
+        mapTooltip.style.visibility = 'visible';
+        mapTooltip.style.opacity = '1';
+    }
+
+    function hideMapTooltip() {
+        mapTooltip.style.visibility = 'hidden';
+        mapTooltip.style.opacity = '0';
+    }
+
+    // --- NEW: Coordinate Tooltip Functions ---
+    function showCoordinateTooltip(mapX, mapY, screenX, screenY) {
+        const gridRef = getGridReference(mapX, mapY);
+        
+        if (!gridRef) {
+            coordinateTooltip.style.visibility = 'hidden';
+            return;
+        }
+
+        // Determine terrain icon/emoji
+        const terrainIcons = {
+            'land': '🏝️',
+            'water': '🌊',
+            'both': '🏖️',
+            'unknown': '❓'
+        };
+        const terrainIcon = terrainIcons[gridRef.terrain] || '❓';
+
+        coordinateTooltip.innerHTML = `
+            <div class="coord-main">${gridRef.full}</div>
+            <div class="coord-latlon">${gridRef.latitude}°N, ${gridRef.longitude}°W</div>
+            <div class="coord-terrain">${terrainIcon} ${gridRef.terrain}</div>
+        `;
+        coordinateTooltip.style.left = mapX + 'px';
+        coordinateTooltip.style.top = mapY + 'px';
+
+        // Position relative to click point
+        const tooltipWidth = 120;
+        const offsetX = 15 / scale;
+        coordinateTooltip.style.transform = `translate(${offsetX}px, -50%) scale(${1 / scale})`;
+        coordinateTooltip.style.visibility = 'visible';
+        coordinateTooltip.style.opacity = '1';
+    }
+
+    // --- 2. Data Loading & Element Creation ---
+
+    function addInteractivity(listItem, mapElement, data) {
+        const tooltipData = {
+            title: data.city || data.name,
+            subtitle: data.country || '',
+            description: data.description,
+            image: data.image || null  // Add image if present (for entities)
+        };
+
+        listItem.addEventListener('mouseenter', () => {
+            mapElement.classList.add('highlighted');
+            showMapTooltip(tooltipData, mapElement);
+        });
+        listItem.addEventListener('mouseleave', () => {
+            mapElement.classList.remove('highlighted');
+            hideMapTooltip();
+        });
+
+        listItem.addEventListener('click', () => {
+            focusOnPoint(data.x, data.y);
+        });
+
+        mapElement.addEventListener('mouseenter', () => {
+            mapElement.classList.add('highlighted');
+            showMapTooltip(tooltipData, mapElement);
+        });
+        mapElement.addEventListener('mouseleave', () => {
+            mapElement.classList.remove('highlighted');
+            hideMapTooltip();
+        });
+    }
+
+    function loadPortData(locations) {
+        document.querySelectorAll('.map-point').forEach(p => p.remove());
+        portList.innerHTML = '';
+
+        const icons = {
+            anchor: {
+                path: "M24 8 A4 4 0 0 1 24 16 A4 4 0 0 1 24 8 M24 16 L24 40 M12 24 L36 24 M8 36 C8 36 12 44 24 44 C36 44 40 36 40 36 L38 34 C38 34 35 40 24 40 C13 40 10 34 10 34 Z M8 36 L10 34 L8 32 M40 36 L38 34 L40 32",
+                viewBox: "0 0 48 48"
+            },
+            biohazard: {
+                path: "M50.14,29.62a9,9,0,0,0-2.79.58c0,.24,0,.48,0,.73a11.21,11.21,0,0,1-5.76,9.78,9.15,9.15,0,0,0,.61,1.83A9.44,9.44,0,0,0,43.07,44,14.77,14.77,0,0,0,51,30.93c0-.44,0-.87-.06-1.3l-.35,0Z M30.76,40.71A11.2,11.2,0,0,1,25,30.93c0-.25,0-.49,0-.73a9,9,0,0,0-2.79-.58h-.41l-.34,0c0,.43-.07.86-.07,1.3A14.77,14.77,0,0,0,29.31,44a10,10,0,0,0,.84-1.45A9.83,9.83,0,0,0,30.76,40.71Z M30.19,21.49a11.11,11.11,0,0,1,12,0,9.08,9.08,0,0,0,1.86-2.22c.12-.2.22-.42.32-.63a14.73,14.73,0,0,0-16.36,0c.1.22.2.43.31.63A9.12,9.12,0,0,0,30.19,21.49Z M32.71,30.93a3.46,3.46,0,0,1,2.48-3.31V25.7H35a11.09,11.09,0,0,1-6.35-3,11.19,11.19,0,0,1-2-2.45c-.07-.12-.13-.26-.2-.39A11.06,11.06,0,0,1,32.48,4.15V2.08a16.69,16.69,0,0,0-13,16.26,16.4,16.4,0,0,0,.25,2.73,16.36,16.36,0,0,0-3,1.36A16.69,16.69,0,0,0,9.12,41.81l1.79-1A11.06,11.06,0,0,1,21.8,27.65c.17,0,.35,0,.52,0a11.24,11.24,0,0,1,8.85,5.07l.11.16,1.6-.93A3.39,3.39,0,0,1,32.71,30.93Z M55.67,22.43a16.71,16.71,0,0,0-3-1.37,16.19,16.19,0,0,0,.24-2.72,16.7,16.7,0,0,0-13-16.27V4.15a11.12,11.12,0,0,1,7.42,10.48A10.93,10.93,0,0,1,46,19.88c-.07.13-.12.27-.2.4a11.09,11.09,0,0,1-2,2.44,11,11,0,0,1-6.36,3l-.24,0v1.91a3.47,3.47,0,0,1,2.48,3.32,3.32,3.32,0,0,1-.16,1l1.6.93.1-.16a11.24,11.24,0,0,1,8.85-5.07c.18,0,.36,0,.53,0A11,11,0,0,1,61.46,40.77l1.8,1A16.7,16.7,0,0,0,55.67,22.43Z M38.39,33.59a3.37,3.37,0,0,1-4.41,0l-1.81,1a11.07,11.07,0,0,1,.43,6.88A11.25,11.25,0,0,1,32,43.37a11.75,11.75,0,0,1-.79,1.43,11.09,11.09,0,0,1-16.55,2.39l-1.79,1A16.68,16.68,0,0,0,33.4,51.34a16.3,16.3,0,0,0,2.79-2,16.65,16.65,0,0,0,23.35-1.09l-1.79-1A11.11,11.11,0,0,1,45,48.38a11,11,0,0,1-3.76-3.58,10.54,10.54,0,0,1-.79-1.43,11.25,11.25,0,0,1-.64-1.85,11,11,0,0,1,.43-6.88Z",
+                viewBox: "0 -8 72 72"
+            },
+            pirate: {
+                path: "M256 31.203c-96 .797-117.377 76.692-79.434 135.133-6.397 6.534-10.344 15.886-.566 25.664 16 16 32 16 39.852 32.42h80.296C304 208 320 208 336 192c9.778-9.778 5.831-19.13-.566-25.664C373.377 107.896 352 32 256 31.203zm-42.146 101.049c.426-.003.862.007 1.306.03 28.404 1.442 40.84 59.718-10.83 51.095-10.412-1.738-17.355-50.963 9.524-51.125zm84.292 0c26.88.162 19.936 49.387 9.524 51.125C256 192 268.436 133.724 296.84 132.28c.444-.022.88-.032 1.306-.03zM32 144c7.406 88.586 64.475 175.544 156.623 236.797 17.959-7.251 35.767-15.322 50.424-23.877C180.254 319.737 104.939 255.465 32 144zm448 0C359.2 328.605 231.863 383.797 183.908 400.797c3.177 5.374 5.997 10.98 8.711 16.432 3.878 7.789 7.581 15.251 11.184 20.986A517.457 517.457 0 0 0 256 417.973l.168.076a884.617 884.617 0 0 0 9.652-4.65C391.488 353.263 471.156 249.79 480 144zm-224 27.725l20.074 40.15L256 199.328l-20.074 12.547L256 171.725zm-65.604 57.11l15.76 51.042s31.268 24.92 49.844 24.92 49.844-24.92 49.844-24.92l15.76-51.041-27.086 19.236-8.063 16.248S267.35 279.547 256 279.547c-11.35 0-30.455-15.227-30.455-15.227l-8.063-16.248-27.086-19.236zm-59.984 152.976c-.783-.02-1.574-.011-2.375.027l.856 17.978c6.36-.302 10.814 2.416 16.11 8.64 5.298 6.222 10.32 15.707 15.24 25.589 4.918 9.882 9.707 20.12 16.122 28.45 6.415 8.327 16.202 15.446 27.969 13.89l-2.36-17.844c-4.094.541-6.78-1.099-11.349-7.031-4.57-5.933-9.275-15.46-14.268-25.489-4.992-10.029-10.297-20.604-17.644-29.234-6.888-8.09-16.556-14.686-28.3-14.976zm251.176 0c-11.745.29-21.413 6.885-28.3 14.976-7.348 8.63-12.653 19.205-17.645 29.234-4.993 10.03-9.698 19.556-14.268 25.489-4.57 5.932-7.255 7.572-11.35 7.031l-2.359 17.844c11.767 1.556 21.554-5.563 27.969-13.89 6.415-8.33 11.204-18.568 16.123-28.45 4.919-9.882 9.94-19.367 15.238-25.59 5.297-6.223 9.75-8.941 16.111-8.639l.856-17.978a32.853 32.853 0 0 0-2.375-.027zm-55.928 18.107c-13.97 10.003-30.13 18.92-47.424 27.478a524.868 524.868 0 0 0 29.961 10.819c3.603-5.735 7.306-13.197 11.184-20.986 2.714-5.453 5.534-11.058 8.71-16.432-.77-.273-1.62-.586-2.43-.879zm-191.808 23.371l-27.67 10.352 7.904 31.771 36.424-11.707c-1.418-2.814-2.81-5.649-4.207-8.457-4.048-8.131-8.169-15.961-12.451-21.959zm244.296 0c-4.282 5.998-8.403 13.828-12.45 21.959-1.399 2.808-2.79 5.643-4.208 8.457l36.424 11.707 7.904-31.771-27.67-10.352zM78.271 435.438a9.632 9.632 0 0 0-1.32.12 6.824 6.824 0 0 0-1.217.313c-11.544 4.201-25.105 18.04-21.648 29.828 3.07 10.472 19.675 13.359 30.492 11.916 3.828-.51 8.415-3.761 12.234-7.086l-8.124-32.648c-3.238-1.285-7.214-2.528-10.417-2.443zm355.458 0c-3.203-.085-7.179 1.158-10.416 2.443l-8.125 32.648c3.819 3.325 8.406 6.576 12.234 7.086 10.817 1.443 27.422-1.444 30.492-11.916 3.457-11.788-10.104-25.627-21.648-29.828a6.824 6.824 0 0 0-1.217-.312 9.632 9.632 0 0 0-1.32-.122z",
+                viewBox: "0 0 512 512"
+            },
+            wigwam: {
+                path: "M24 4 L4 44 L12 44 L12 32 L36 32 L36 44 L44 44 Z M18 18 L30 18 L30 26 L18 26 Z",
+                viewBox: "0 0 48 48"
+            },
+            church: {
+                path: "M24 4 L24 10 M20 7 L28 7 M20 38 L28 38 L28 28 L20 28 Z M16 18 L24 12 L32 18 L32 42 L16 42 Z",
+                viewBox: "0 0 48 48"
+            },
+            flag: {
+                path: "M8 6 L8 42 M8 10 L28 10 L28 26 L8 26 M12 14 L24 14 L24 22 L12 22 Z",
+                viewBox: "0 0 36 36"
+            }
+        };
+        
+        // Function to get the appropriate icon for a faction
+        function getIconForFaction(faction) {
+            if (faction === 'infected') return icons.biohazard;
+            if (faction === 'pirate') return icons.pirate;
+            if (faction === 'native') return icons.wigwam;
+            if (faction === 'jesuit') return icons.church;
+            if (faction === 'independent') return icons.flag;
+            return icons.anchor; // Default for all other factions
+        }
+
+        locations.forEach(loc => {
+            const factionClass = loc.country.toLowerCase().replace(/\s+/g, '-');
+            const icon = getIconForFaction(factionClass);
+
+            const point = document.createElement('div');
+            point.className = `map-point ${factionClass}`;
+            point.style.left = loc.x + 'px';
+            point.style.top = loc.y + 'px';
+            point.id = 'point-' + loc.id;
+            point.innerHTML = `
+                <svg class="map-icon" viewBox="${icon.viewBox}" xmlns="http://www.w3.org/2000/svg">
+                    <path d="${icon.path}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+            mapContainer.appendChild(point);
+
+            const listItem = document.createElement('div');
+            listItem.className = 'port-item';
+            listItem.dataset.targetId = point.id;
+            listItem.innerHTML = `
+                <svg class="sidebar-icon ${factionClass}" viewBox="${icon.viewBox}" xmlns="http://www.w3.org/2000/svg">
+                    <path d="${icon.path}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                ${loc.city}
+            `;
+            portList.appendChild(listItem);
+
+            addInteractivity(listItem, point, loc);
+        });
+    }
+
+    function loadEntityData(entities) {
+        document.querySelectorAll('.map-entity').forEach(e => e.remove());
+        entityList.innerHTML = '';
+
+        entities.forEach(entity => {
+            const imageName = entity.image || 'default.png';
+
+            const mapElement = document.createElement('div');
+            mapElement.className = 'map-entity';
+            mapElement.style.left = entity.x + 'px';
+            mapElement.style.top = entity.y + 'px';
+            mapElement.id = 'entity-' + entity.id;
+            mapElement.innerHTML = `<img src="images/${imageName}" alt="${entity.name}">`;
+            mapContainer.appendChild(mapElement);
+
+            const listItem = document.createElement('div');
+            listItem.className = 'port-item';
+            listItem.dataset.targetId = mapElement.id;
+            listItem.innerHTML = `
+                <img src="images/${imageName}" alt="${entity.name}">
+                ${entity.name}
+            `;
+            entityList.appendChild(listItem);
+
+            addInteractivity(listItem, mapElement, entity);
+        });
+    }
+
+    function loadGridData(gridItems) {
+        document.querySelectorAll('.map-grid-label').forEach(g => g.remove());
+
+        gridItems.forEach(item => {
+            if (item.type === 'label') return;
+            
+            const label = document.createElement('div');
+            label.className = 'map-grid-label';
+            label.style.left = item.x + 'px';
+            label.style.top = item.y + 'px';
+            label.textContent = item.name;
+            mapContainer.appendChild(label);
+        });
+    }
+
+    function loadAllData() {
+        Promise.all([
+            fetch('ports.json').then(res => res.json()),
+            fetch('entities.json').then(res => res.json()),
+            fetch('grid.json').then(res => res.json()),
+            fetch('terrain.json').then(res => res.json())
+        ])
+        .then(([locations, entities, gridItems, terrain]) => {
+            terrainData = terrain;
+            loadPortData(locations);
+            loadEntityData(entities);
+            loadGridData(gridItems);
+            updateTransform();
+        })
+        .catch(error => {
+            console.error('There was a problem fetching map data:', error);
+        });
+    }
+
+    // --- 3. Grid Line Functions ---
+
+    function createGridLines() {
+        document.querySelectorAll('.map-grid-line').forEach(l => l.remove());
+
+        const gridTotalWidth = GRID_COLS * CELL_WIDTH;
+        const gridTotalHeight = GRID_ROWS * CELL_HEIGHT;
+
+        // Major grid lines
+        for (let i = 0; i <= GRID_COLS; i++) {
+            const line = document.createElement('div');
+            line.className = 'map-grid-line vertical-line major-grid';
+            line.style.left = (i * CELL_WIDTH) + GRID_START_X + 'px';
+            line.style.top = GRID_START_Y + 'px';
+            line.style.height = gridTotalHeight + 'px';
+            mapContainer.appendChild(line);
+        }
+
+        for (let i = 0; i <= GRID_ROWS; i++) {
+            const line = document.createElement('div');
+            line.className = 'map-grid-line horizontal-line major-grid';
+            line.style.top = (i * CELL_HEIGHT) + GRID_START_Y + 'px';
+            line.style.left = GRID_START_X + 'px';
+            line.style.width = gridTotalWidth + 'px';
+            mapContainer.appendChild(line);
+        }
+    }
+
+    function createSubGridLines() {
+        // Remove existing sub-grid lines
+        document.querySelectorAll('.sub-grid-line').forEach(l => l.remove());
+
+        const subCellWidth = CELL_WIDTH / SUBGRID_DIVISIONS;
+        const subCellHeight = CELL_HEIGHT / SUBGRID_DIVISIONS;
+
+        // Create sub-grid lines for each major cell
+        for (let col = 0; col < GRID_COLS; col++) {
+            for (let row = 0; row < GRID_ROWS; row++) {
+                const cellX = GRID_START_X + (col * CELL_WIDTH);
+                const cellY = GRID_START_Y + (row * CELL_HEIGHT);
+
+                // Vertical sub-grid lines (skip first and last to avoid overlap with major grid)
+                for (let i = 1; i < SUBGRID_DIVISIONS; i++) {
+                    const line = document.createElement('div');
+                    line.className = 'map-grid-line vertical-line sub-grid-line';
+                    line.style.left = cellX + (i * subCellWidth) + 'px';
+                    line.style.top = cellY + 'px';
+                    line.style.height = CELL_HEIGHT + 'px';
+                    mapContainer.appendChild(line);
+                }
+
+                // Horizontal sub-grid lines
+                for (let i = 1; i < SUBGRID_DIVISIONS; i++) {
+                    const line = document.createElement('div');
+                    line.className = 'map-grid-line horizontal-line sub-grid-line';
+                    line.style.top = cellY + (i * subCellHeight) + 'px';
+                    line.style.left = cellX + 'px';
+                    line.style.width = CELL_WIDTH + 'px';
+                    mapContainer.appendChild(line);
+                }
+            }
+        }
+    }
+
+    function updateSubGridVisibility() {
+        const showSubGrid = scale >= SUBGRID_ZOOM_THRESHOLD;
+        const subGridLines = document.querySelectorAll('.sub-grid-line');
+        
+        if (showSubGrid && subGridLines.length === 0) {
+            createSubGridLines();
+        }
+        
+        subGridLines.forEach(line => {
+            line.style.opacity = showSubGrid ? '1' : '0';
+        });
+    }
+
+    // --- 4. Transformation & Focus Functions ---
+
+    function getViewportWidth() {
+        return window.innerWidth - SIDEBAR_WIDTH;
+    }
+
+    function getViewportHeight() {
+        return window.innerHeight;
+    }
+
+    function clampPan() {
+        const viewportWidth = getViewportWidth();
+        const viewportHeight = getViewportHeight();
+
+        const currentMapWidth = MAP_WIDTH * scale;
+        const currentMapHeight = MAP_HEIGHT * scale;
+
+        let minX, maxX, minY, maxY;
+
+        if (currentMapWidth < viewportWidth) {
+            minX = (viewportWidth - currentMapWidth) / 2;
+            maxX = minX;
+        } else {
+            minX = viewportWidth - currentMapWidth;
+            maxX = 0;
+        }
+
+        if (currentMapHeight < viewportHeight) {
+            minY = (viewportHeight - currentMapHeight) / 2;
+            maxY = minY;
+        } else {
+            minY = viewportHeight - currentMapHeight;
+            maxY = 0;
+        }
+
+        panX = Math.max(minX, Math.min(maxX, panX));
+        panY = Math.max(minY, Math.min(maxY, panY));
+    }
+
+    function updateTransform() {
+        clampPan();
+
+        const inverseScale = 1 / scale;
+
+        document.querySelectorAll('.map-point').forEach(point => {
+            let baseTransform = 'translate(-50%, -50%)';
+            if (point.matches('.highlighted')) {
+                baseTransform += ' scale(2.0)';
+            } else if (point.matches(':hover')) {
+                baseTransform += ' scale(1.3)';
+            }
+            point.style.transform = `${baseTransform} scale(${inverseScale})`;
+        });
+
+        document.querySelectorAll('.map-entity').forEach(entity => {
+            let baseTransform = 'translate(-50%, -50%)';
+            if (entity.matches('.highlighted')) {
+                baseTransform += ' scale(1.5)';
+            } else if (entity.matches(':hover')) {
+                baseTransform += ' scale(1.2)';
+            }
+            entity.style.transform = `${baseTransform} scale(${inverseScale})`;
+        });
+
+        document.querySelectorAll('.map-grid-label').forEach(label => {
+            label.style.transform = `translate(-50%, -50%) scale(${inverseScale})`;
+        });
+
+        let currentTooltipTransform = mapTooltip.style.transform || 'translate(0px, 0%)';
+        let translatePart = currentTooltipTransform.match(/translate\([^)]+\)/)?.[0] || 'translate(0px, 0%)';
+        mapTooltip.style.transform = `${translatePart} scale(${inverseScale})`;
+
+        // Update sub-grid visibility
+        updateSubGridVisibility();
+
+        // Update zoom level display
+        zoomLevelDisplay.textContent = `${scale.toFixed(1)}x`;
+
+        mapContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    }
+
+    function zoom(delta, clientX, clientY) {
+        const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale + delta));
+        if (newScale === scale) return;
+
+        const clientX_relative = clientX - SIDEBAR_WIDTH;
+        const mouseOnMapX = (clientX_relative - panX) / scale;
+        const mouseOnMapY = (clientY - panY) / scale;
+
+        panX = clientX_relative - (mouseOnMapX * newScale);
+        panY = clientY - (mouseOnMapY * newScale);
+        scale = newScale;
+
+        updateTransform();
+    }
+
+    function zoomCenter(direction) {
+        mapContainer.classList.add('is-transitioning');
+        const delta = ZOOM_SPEED * direction * scale;
+        const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
+        const clientY = getViewportHeight() / 2;
+        zoom(delta, clientX, clientY);
+    }
+
+    function panMap(dx, dy) {
+        mapContainer.classList.add('is-transitioning');
+        panX += dx;
+        panY += dy;
+        updateTransform();
+    }
+
+    function focusOnPoint(x, y) {
+        mapContainer.classList.add('is-transitioning');
+        scale = FOCUS_SCALE;
+        panX = (getViewportWidth() / 2) - (x * scale);
+        panY = (getViewportHeight() / 2) - (y * scale);
+        updateTransform();
+    }
+
+    // --- 5. Initial Setup ---
+
+    panX = (getViewportWidth() - (MAP_WIDTH * scale)) / 2;
+    panY = (getViewportHeight() - (MAP_HEIGHT * scale)) / 2;
+
+    if (getViewportWidth() === MAP_WIDTH && getViewportHeight() === MAP_HEIGHT) {
+        mapViewport.style.cursor = 'default';
+        panX = 0;
+        panY = 0;
+    }
+
+    createGridLines();
+    loadAllData();
+
+    setInterval(loadAllData, 60000);
+
+    // --- 6. Event Listeners ---
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab + '-content').classList.add('active');
+        });
+    });
+
+    // NEW: Click handler for coordinate display
+    mapViewport.addEventListener('click', (e) => {
+        // Ignore clicks on interactive elements
+        if (e.target.closest('.map-point') || 
+            e.target.closest('.map-entity') || 
+            e.target.closest('.zoom-btn')) {
+            return;
+        }
+
+        // Don't show coordinate tooltip if port/entity tooltip is already visible
+        if (mapTooltip.style.visibility === 'visible') {
+            return;
+        }
+
+        // Convert screen click to map coordinates
+        const containerRect = mapContainer.getBoundingClientRect();
+        const clickX = e.clientX - containerRect.left;
+        const clickY = e.clientY - containerRect.top;
+        
+        const mapX = clickX / scale;
+        const mapY = clickY / scale;
+
+        showCoordinateTooltip(mapX, mapY, e.clientX, e.clientY);
+    });
+
+    mapViewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.map-point') || e.target.closest('.map-entity')) return;
+        mapContainer.classList.remove('is-transitioning');
+        isDragging = true;
+        mapViewport.classList.add('is-dragging');
+        startX = e.pageX - panX;
+        startY = e.pageY - panY;
+    });
+
+    mapViewport.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        panX = e.pageX - startX;
+        panY = e.pageY - startY;
+        updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+        isDragging = false;
+        mapViewport.classList.remove('is-dragging');
+    });
+
+    mapViewport.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.map-point') || e.target.closest('.map-entity')) return;
+        mapContainer.classList.remove('is-transitioning');
+        isDragging = true;
+        startX = e.touches[0].pageX - panX;
+        startY = e.touches[0].pageY - panY;
+    }, { passive: false });
+
+    mapViewport.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        panX = e.touches[0].pageX - startX;
+        panY = e.touches[0].pageY - startY;
+        updateTransform();
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => {
+        isDragging = false;
+    });
+
+    mapViewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        mapContainer.classList.remove('is-transitioning');
+        const delta = -Math.sign(e.deltaY) * ZOOM_SPEED * scale;
+        zoom(delta, e.clientX, e.clientY);
+    }, { passive: false });
+
+    zoomInBtn.addEventListener('click', () => zoomCenter(1));
+    zoomOutBtn.addEventListener('click', () => zoomCenter(-1));
+
+    panUpBtn.addEventListener('click', () => panMap(0, PAN_AMOUNT));
+    panDownBtn.addEventListener('click', () => panMap(0, -PAN_AMOUNT));
+    panLeftBtn.addEventListener('click', () => panMap(PAN_AMOUNT, 0));
+    panRightBtn.addEventListener('click', () => panMap(-PAN_AMOUNT, 0));
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            zoomCenter(1);
+        } else if (e.key === '-' || e.key === '_') {
+            e.preventDefault();
+            zoomCenter(-1);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        mapContainer.classList.remove('is-transitioning');
+        updateTransform();
+    });
+
+    mapContainer.addEventListener('transitionend', () => {
+        mapContainer.classList.remove('is-transitioning');
+    });
+});
