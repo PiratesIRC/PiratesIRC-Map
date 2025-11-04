@@ -129,34 +129,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Get grid reference for this location
         const gridRef = getGridReference(mapX, mapY);
-        
-        // Build tooltip HTML with coordinates
-        let tooltipHTML = '';
-        
-        // Add entity image if present
+
+        // Clear existing content
+        mapTooltip.innerHTML = '';
+
+        // Add entity image if present (safely)
         if (tooltipData.image) {
-            tooltipHTML += `
-                <div class="tooltip-image">
-                    <img src="images/${tooltipData.image}" alt="${tooltipData.title}">
-                </div>
-            `;
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'tooltip-image';
+            const img = createSafeImage(tooltipData.image, tooltipData.title);
+            imageDiv.appendChild(img);
+            mapTooltip.appendChild(imageDiv);
         }
-        
-        tooltipHTML += `
-            <h4>${tooltipData.title} ${tooltipData.subtitle ? `(${tooltipData.subtitle})` : ''}</h4>
-            <p>${tooltipData.description}</p>
-        `;
-        
+
+        // Add title and subtitle (safely)
+        const h4 = document.createElement('h4');
+        const safeTitle = sanitizeText(tooltipData.title || 'Unknown', 100);
+        const safeSubtitle = tooltipData.subtitle ? sanitizeText(tooltipData.subtitle, 50) : '';
+        h4.textContent = safeTitle + (safeSubtitle ? ` (${safeSubtitle})` : '');
+        mapTooltip.appendChild(h4);
+
+        // Add description (safely)
+        const p = document.createElement('p');
+        p.textContent = sanitizeText(tooltipData.description || '', 500);
+        mapTooltip.appendChild(p);
+
+        // Add coordinates if available
         if (gridRef) {
-            tooltipHTML += `
-                <div class="tooltip-coordinates">
-                    <div class="tooltip-grid">${gridRef.full}</div>
-                    <div class="tooltip-latlon">${gridRef.latitude}°N, ${gridRef.longitude}°W</div>
-                </div>
-            `;
+            const coordDiv = document.createElement('div');
+            coordDiv.className = 'tooltip-coordinates';
+
+            const gridDiv = document.createElement('div');
+            gridDiv.className = 'tooltip-grid';
+            gridDiv.textContent = gridRef.full;
+
+            const latlonDiv = document.createElement('div');
+            latlonDiv.className = 'tooltip-latlon';
+            latlonDiv.textContent = `${gridRef.latitude}°N, ${gridRef.longitude}°W`;
+
+            coordDiv.appendChild(gridDiv);
+            coordDiv.appendChild(latlonDiv);
+            mapTooltip.appendChild(coordDiv);
         }
-        
-        mapTooltip.innerHTML = tooltipHTML;
 
         const tooltipWidth = 200;
         const tooltipHeight = mapTooltip.offsetHeight || 100;
@@ -310,30 +324,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         locations.forEach(loc => {
-            const factionClass = loc.country.toLowerCase().replace(/\s+/g, '-');
+            // Sanitize faction name to prevent XSS
+            const factionClass = sanitizeFaction(loc.country);
             const icon = getIconForFaction(factionClass);
 
             const point = document.createElement('div');
             point.className = `map-point ${factionClass}`;
             point.style.left = loc.x + 'px';
             point.style.top = loc.y + 'px';
-            point.id = 'point-' + loc.id;
-            point.innerHTML = `
-                <svg class="map-icon" viewBox="${icon.viewBox}" xmlns="http://www.w3.org/2000/svg">
-                    <path d="${icon.path}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            `;
+            point.id = 'point-' + sanitizeText(loc.id, 50).replace(/[^a-zA-Z0-9-_]/g, '');
+
+            // Create SVG safely using DOM methods
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'map-icon');
+            svg.setAttribute('viewBox', icon.viewBox);
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', icon.path);
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke-linecap', 'round');
+            path.setAttribute('stroke-linejoin', 'round');
+
+            svg.appendChild(path);
+            point.appendChild(svg);
             mapContainer.appendChild(point);
 
+            // Create sidebar item safely
             const listItem = document.createElement('div');
             listItem.className = 'port-item';
             listItem.dataset.targetId = point.id;
-            listItem.innerHTML = `
-                <svg class="sidebar-icon ${factionClass}" viewBox="${icon.viewBox}" xmlns="http://www.w3.org/2000/svg">
-                    <path d="${icon.path}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                ${loc.city}
-            `;
+
+            const sidebarSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            sidebarSvg.setAttribute('class', `sidebar-icon ${factionClass}`);
+            sidebarSvg.setAttribute('viewBox', icon.viewBox);
+            sidebarSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+            const sidebarPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            sidebarPath.setAttribute('d', icon.path);
+            sidebarPath.setAttribute('fill', 'none');
+            sidebarPath.setAttribute('stroke-linecap', 'round');
+            sidebarPath.setAttribute('stroke-linejoin', 'round');
+
+            sidebarSvg.appendChild(sidebarPath);
+            listItem.appendChild(sidebarSvg);
+
+            // Add city name as text node (safe)
+            const cityText = document.createTextNode(' ' + sanitizeText(loc.city, 100));
+            listItem.appendChild(cityText);
+
             portList.appendChild(listItem);
 
             addInteractivity(listItem, point, loc);
@@ -345,23 +384,33 @@ document.addEventListener('DOMContentLoaded', () => {
         entityList.innerHTML = '';
 
         entities.forEach(entity => {
-            const imageName = entity.image || 'default.png';
+            // Sanitize image path and entity data
+            const safeName = sanitizeText(entity.name || 'Unknown', 100);
+            const safeId = sanitizeText(entity.id, 50).replace(/[^a-zA-Z0-9-_]/g, '');
 
             const mapElement = document.createElement('div');
             mapElement.className = 'map-entity';
             mapElement.style.left = entity.x + 'px';
             mapElement.style.top = entity.y + 'px';
-            mapElement.id = 'entity-' + entity.id;
-            mapElement.innerHTML = `<img src="images/${imageName}" alt="${entity.name}">`;
+            mapElement.id = 'entity-' + safeId;
+
+            // Create image safely
+            const img = createSafeImage(entity.image || 'default.png', safeName);
+            mapElement.appendChild(img);
             mapContainer.appendChild(mapElement);
 
+            // Create sidebar item safely
             const listItem = document.createElement('div');
             listItem.className = 'port-item';
             listItem.dataset.targetId = mapElement.id;
-            listItem.innerHTML = `
-                <img src="images/${imageName}" alt="${entity.name}">
-                ${entity.name}
-            `;
+
+            const sidebarImg = createSafeImage(entity.image || 'default.png', safeName);
+            listItem.appendChild(sidebarImg);
+
+            // Add entity name as text node
+            const nameText = document.createTextNode(' ' + safeName);
+            listItem.appendChild(nameText);
+
             entityList.appendChild(listItem);
 
             addInteractivity(listItem, mapElement, entity);
@@ -391,9 +440,34 @@ document.addEventListener('DOMContentLoaded', () => {
             fetch('terrain.json').then(res => res.json())
         ])
         .then(([locations, entities, gridItems, terrain]) => {
-            terrainData = terrain;
-            loadPortData(locations);
-            loadEntityData(entities);
+            // Validate terrain data
+            if (!validateTerrain(terrain)) {
+                console.error('Invalid terrain data detected. Using defaults.');
+                terrainData = {};
+            } else {
+                terrainData = terrain;
+            }
+
+            // Filter and validate port data
+            const validLocations = Array.isArray(locations)
+                ? locations.filter(loc => validatePort(loc, MAP_WIDTH, MAP_HEIGHT))
+                : [];
+
+            if (validLocations.length !== locations.length) {
+                console.warn(`Filtered out ${locations.length - validLocations.length} invalid ports`);
+            }
+
+            // Filter and validate entity data
+            const validEntities = Array.isArray(entities)
+                ? entities.filter(ent => validateEntity(ent, MAP_WIDTH, MAP_HEIGHT))
+                : [];
+
+            if (validEntities.length !== entities.length) {
+                console.warn(`Filtered out ${entities.length - validEntities.length} invalid entities`);
+            }
+
+            loadPortData(validLocations);
+            loadEntityData(validEntities);
             loadGridData(gridItems);
             updateTransform();
         })

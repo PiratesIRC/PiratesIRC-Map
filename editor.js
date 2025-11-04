@@ -169,11 +169,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const terrainType = terrainData[key] || 'unknown';
         const gridRef = getGridReference(event.clientX, event.clientY);
 
-        popupContent.innerHTML = `
-            <h4>${key}</h4>
-            <p><strong>Lat/Lon:</strong> ${gridRef.latitude}°N, ${gridRef.longitude}°W</p>
-            <p><strong>Current Type:</strong> <span id="popup-terrain-type">${terrainType}</span></p>
-        `;
+        // Clear existing content
+        popupContent.innerHTML = '';
+
+        // Create content safely using DOM methods
+        const h4 = document.createElement('h4');
+        h4.textContent = key;
+        popupContent.appendChild(h4);
+
+        const latLonP = document.createElement('p');
+        const latLonStrong = document.createElement('strong');
+        latLonStrong.textContent = 'Lat/Lon: ';
+        latLonP.appendChild(latLonStrong);
+        latLonP.appendChild(document.createTextNode(`${gridRef.latitude}°N, ${gridRef.longitude}°W`));
+        popupContent.appendChild(latLonP);
+
+        const typeP = document.createElement('p');
+        const typeStrong = document.createElement('strong');
+        typeStrong.textContent = 'Current Type: ';
+        typeP.appendChild(typeStrong);
+
+        const typeSpan = document.createElement('span');
+        typeSpan.id = 'popup-terrain-type';
+        typeSpan.textContent = terrainType;
+        typeP.appendChild(typeSpan);
+        popupContent.appendChild(typeP);
 
         // Set data attribute on popup for the update function
         editorPopup.dataset.key = key;
@@ -228,10 +248,22 @@ document.addEventListener('DOMContentLoaded', () => {
         jsonOutput.value = JSON.stringify(terrainData, Object.keys(terrainData).sort(), 2);
     }
 
-    copyJsonBtn.addEventListener('click', () => {
-        jsonOutput.select();
-        document.execCommand('copy');
-        statusBar.textContent = 'JSON copied to clipboard!';
+    copyJsonBtn.addEventListener('click', async () => {
+        try {
+            // Try modern Clipboard API first
+            await navigator.clipboard.writeText(jsonOutput.value);
+            statusBar.textContent = 'JSON copied to clipboard!';
+        } catch (err) {
+            // Fallback for older browsers
+            try {
+                jsonOutput.select();
+                document.execCommand('copy');
+                statusBar.textContent = 'JSON copied to clipboard!';
+            } catch (e) {
+                statusBar.textContent = 'Failed to copy. Please copy manually.';
+                console.error('Copy failed:', e);
+            }
+        }
     });
 
     // --- Map Navigation (Pan & Zoom) ---

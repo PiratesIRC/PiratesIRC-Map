@@ -1,4 +1,4 @@
-# PiratesIRC Interactive Map
+# Caribbean Interactive Map
 
 An interactive web-based map visualization of the Caribbean region, featuring zoomable/pannable navigation, ports, ships, and a detailed terrain classification system.
 
@@ -233,4 +233,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Map imagery of the Caribbean region
 - Icon assets for ships and factions
-
