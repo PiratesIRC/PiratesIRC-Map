@@ -1011,10 +1011,10 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
     versionBadge.textContent = `v${getVersionNumber()}`;
 
     setInterval(() => {
-        loadingIndicator.style.display = 'flex';
+        loadingIndicator.classList.remove('hidden');
         loadAllData();
         setTimeout(() => {
-            loadingIndicator.style.display = 'none';
+            loadingIndicator.classList.add('hidden');
         }, 1000);
     }, 60000);
 
@@ -1153,9 +1153,9 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         if (e.key === 'Escape') {
             hideMapTooltip();
             coordinateTooltip.style.visibility = 'hidden';
-            if (helpModal.style.display === 'flex') {
-                helpModal.style.display = 'none';
-                versionBadge.style.display = 'none';
+            if (!helpModal.classList.contains('hidden')) {
+                helpModal.classList.add('hidden');
+                versionBadge.classList.add('hidden');
             }
         } else if (e.key === '+' || e.key === '=') {
             e.preventDefault();
@@ -1203,19 +1203,19 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
 
     // Help modal events
     helpButton.addEventListener('click', () => {
-        helpModal.style.display = 'flex';
-        versionBadge.style.display = 'block';
+        helpModal.classList.remove('hidden');
+        versionBadge.classList.remove('hidden');
     });
 
     helpModalClose.addEventListener('click', () => {
-        helpModal.style.display = 'none';
-        versionBadge.style.display = 'none';
+        helpModal.classList.add('hidden');
+        versionBadge.classList.add('hidden');
     });
 
     helpModal.addEventListener('click', (e) => {
         if (e.target === helpModal) {
-            helpModal.style.display = 'none';
-            versionBadge.style.display = 'none';
+            helpModal.classList.add('hidden');
+            versionBadge.classList.add('hidden');
         }
     });
 
@@ -1232,8 +1232,8 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         e.stopPropagation();
 
         // Close help dialog
-        helpModal.style.display = 'none';
-        versionBadge.style.display = 'none';
+        helpModal.classList.add('hidden');
+        versionBadge.classList.add('hidden');
 
         const effects = [
             // Effect 1: Spin the map
@@ -1310,33 +1310,33 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
             },
             // Effect 8: Jolly Roger flag
             () => {
-                jollyRoger.style.display = 'block';
+                jollyRoger.classList.remove('hidden');
                 jollyRoger.style.animation = 'fade-in-out 4s ease-in-out, wave-flag 0.5s ease-in-out infinite';
                 setTimeout(() => {
-                    jollyRoger.style.display = 'none';
+                    jollyRoger.classList.add('hidden');
                     jollyRoger.style.animation = '';
                 }, 4000);
             },
             // Effect 9: Cannonball attack
             () => {
-                cannonball.style.display = 'block';
+                cannonball.classList.remove('hidden');
                 cannonball.style.animation = 'cannonball-flight 1.5s linear';
                 setTimeout(() => {
                     // Screen shake on impact
                     document.body.style.animation = 'shake 0.3s';
                     setTimeout(() => {
                         document.body.style.animation = '';
-                        cannonball.style.display = 'none';
+                        cannonball.classList.add('hidden');
                         cannonball.style.animation = '';
                     }, 300);
                 }, 1500);
             },
             // Effect 10: The Kraken
             () => {
-                krakenTentacle.style.display = 'block';
+                krakenTentacle.classList.remove('hidden');
                 krakenTentacle.style.animation = 'tentacle-wave 3s ease-in-out';
                 setTimeout(() => {
-                    krakenTentacle.style.display = 'none';
+                    krakenTentacle.classList.add('hidden');
                     krakenTentacle.style.animation = '';
                 }, 3000);
             },
