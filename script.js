@@ -865,7 +865,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.map-entity').forEach(entity => {
                 const x = parseFloat(entity.style.left);
                 const y = parseFloat(entity.style.top);
-                ctx.fillStyle = '#0ff';
+
+                // Determine color based on entity type
+                const entityId = entity.id || '';
+                if (entityId.includes('ship')) {
+                    ctx.fillStyle = '#000000'; // Black for ships
+                } else if (entityId.includes('storm')) {
+                    ctx.fillStyle = '#ffffff'; // White for storms
+                } else {
+                    ctx.fillStyle = '#0ff'; // Cyan for other entities
+                }
+
                 ctx.beginPath();
                 ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
                 ctx.fill();
