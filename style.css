@@ -90,7 +90,7 @@ html, body {
 
 .clear-search-btn {
     position: absolute;
-    right: 24px;
+    right: 15px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -1097,6 +1097,32 @@ html, body {
     font-size: 0.85em;
     font-weight: 400;
     color: #999;
+}
+
+/* --- Easter Egg Dialog --- */
+.easter-egg-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(26, 26, 26, 0.98);
+    border: 3px solid #ffd700;
+    border-radius: 10px;
+    padding: 30px 40px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 2000;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 215, 0, 0.3);
+    font-family: 'IM Fell English', serif;
+    color: #f0f0f0;
+    font-size: 18px;
+    line-height: 1.8;
+    text-align: center;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    white-space: pre-line;
 }
 
 .copy-coords-btn {
