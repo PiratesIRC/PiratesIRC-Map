@@ -64,7 +64,7 @@
             <div class="mini-map-viewport" id="mini-map-viewport"></div>
         </div>
 
-        <!-- Help Button -->
+        <!-- Help Button (moved to upper right) -->
         <button class="help-button" id="help-button" title="Help & Shortcuts">?</button>
 
         <!-- Help Modal -->
@@ -126,8 +126,18 @@
 
         <div class="map-toolbar">
             <!-- Collapse/Expand Buttons -->
-            <button class="toolbar-collapse-btn" id="toolbar-collapse-btn" title="Collapse toolbar">▼</button>
-            <button class="toolbar-expand-btn" id="toolbar-expand-btn" title="Expand toolbar">▲</button>
+            <button class="toolbar-collapse-btn" id="toolbar-collapse-btn" title="Collapse toolbar">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 12l-4-4h8l-4 4z"/>
+                    <path d="M8 4l-4 4h8l-4-4z"/>
+                </svg>
+            </button>
+            <button class="toolbar-expand-btn" id="toolbar-expand-btn" title="Expand toolbar">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 4l4 4H4l4-4z"/>
+                    <path d="M8 12l4-4H4l4 4z"/>
+                </svg>
+            </button>
 
             <!-- Reset Button -->
             <div class="toolbar-section">
@@ -138,22 +148,14 @@
             <div class="toolbar-section">
                 <div class="toolbar-label">⊕ Nav</div>
                 <div class="pan-controls">
-                    <button class="pan-btn" id="pan-up-btn" title="Pan Up (↑)">&#8593;</button>
-                    <div>
+                    <div class="pan-row">
+                        <button class="pan-btn" id="pan-up-btn" title="Pan Up (↑)">&#8593;</button>
+                    </div>
+                    <div class="pan-row">
                         <button class="pan-btn" id="pan-left-btn" title="Pan Left (←)">&#8592;</button>
+                        <button class="pan-btn" id="pan-down-btn" title="Pan Down (↓)">&#8595;</button>
                         <button class="pan-btn" id="pan-right-btn" title="Pan Right (→)">&#8594;</button>
                     </div>
-                    <button class="pan-btn" id="pan-down-btn" title="Pan Down (↓)">&#8595;</button>
-                </div>
-            </div>
-
-            <!-- Zoom Controls -->
-            <div class="toolbar-section">
-                <div class="toolbar-label">🔍 Zoom</div>
-                <div class="zoom-controls">
-                    <div class="zoom-level-display" id="zoom-level-display">1.0x</div>
-                    <button class="zoom-btn" id="zoom-in-btn" title="Zoom In (+)">+</button>
-                    <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out (-)">-</button>
                 </div>
             </div>
 

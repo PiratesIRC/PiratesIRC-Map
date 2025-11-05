@@ -9,15 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get all UI elements
     const mapViewport = document.getElementById('map-viewport');
     const mapContainer = document.getElementById('map-container');
-    const zoomInBtn = document.getElementById('zoom-in-btn');
-    const zoomOutBtn = document.getElementById('zoom-out-btn');
     const panUpBtn = document.getElementById('pan-up-btn');
     const panDownBtn = document.getElementById('pan-down-btn');
     const panLeftBtn = document.getElementById('pan-left-btn');
     const panRightBtn = document.getElementById('pan-right-btn');
     const mapTooltip = document.getElementById('map-tooltip');
     const coordinateTooltip = document.getElementById('coordinate-tooltip');
-    const zoomLevelDisplay = document.getElementById('zoom-level-display');
 
     // NEW: Sidebar and Tab elements
     const portList = document.getElementById('port-list');
@@ -709,9 +706,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update sub-grid visibility
         updateSubGridVisibility();
 
-        // Update zoom level display
-        zoomLevelDisplay.textContent = `${scale.toFixed(1)}x`;
-
         mapContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
 
         // Update zoom slider
@@ -1000,13 +994,26 @@ document.addEventListener('DOMContentLoaded', () => {
         zoom(delta, e.clientX, e.clientY);
     }, { passive: false });
 
-    zoomInBtn.addEventListener('click', () => zoomCenter(1));
-    zoomOutBtn.addEventListener('click', () => zoomCenter(-1));
-
-    panUpBtn.addEventListener('click', () => panMap(0, PAN_AMOUNT));
-    panDownBtn.addEventListener('click', () => panMap(0, -PAN_AMOUNT));
-    panLeftBtn.addEventListener('click', () => panMap(PAN_AMOUNT, 0));
-    panRightBtn.addEventListener('click', () => panMap(-PAN_AMOUNT, 0));
+    panUpBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panMap(0, PAN_AMOUNT);
+    });
+    panDownBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panMap(0, -PAN_AMOUNT);
+    });
+    panLeftBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panMap(PAN_AMOUNT, 0);
+    });
+    panRightBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panMap(-PAN_AMOUNT, 0);
+    });
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1101,7 +1108,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Zoom slider +/- buttons
-    zoomSliderPlus.addEventListener('click', () => {
+    zoomSliderPlus.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const newScale = Math.min(MAX_SCALE, scale + ZOOM_SPEED * scale);
         const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
         const clientY = getViewportHeight() / 2;
@@ -1117,7 +1126,14 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTransform();
     });
 
-    zoomSliderMinus.addEventListener('click', () => {
+    zoomSliderPlus.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    zoomSliderMinus.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const newScale = Math.max(MIN_SCALE, scale - ZOOM_SPEED * scale);
         const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
         const clientY = getViewportHeight() / 2;
@@ -1131,6 +1147,11 @@ document.addEventListener('DOMContentLoaded', () => {
         scale = newScale;
 
         updateTransform();
+    });
+
+    zoomSliderMinus.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
     });
 
     window.addEventListener('resize', () => {

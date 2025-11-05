@@ -66,12 +66,12 @@ html, body {
 /* Search Box */
 .search-container {
     position: relative;
-    padding: 10px;
+    padding: 10px 10px 10px 15px;
     border-bottom: 1px solid #333;
 }
 
 #search-box {
-    width: calc(100% - 20px); /* Account for padding */
+    width: calc(100% - 25px);
     padding: 8px 30px 8px 10px;
     background-color: #2a2a2a;
     border: 1px solid #444;
@@ -90,7 +90,7 @@ html, body {
 
 .clear-search-btn {
     position: absolute;
-    right: 15px;
+    right: 18px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -411,10 +411,18 @@ html, body {
     border-radius: 3px;
     color: #ffd700;
     cursor: pointer;
-    padding: 4px 8px;
+    padding: 6px 8px;
     font-size: 16px;
     transition: all 0.2s ease;
     align-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toolbar-collapse-btn svg,
+.toolbar-expand-btn svg {
+    fill: currentColor;
 }
 
 .toolbar-collapse-btn:hover,
@@ -461,6 +469,14 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 2px;
+}
+
+.pan-row {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
 }
 
 .pan-btn {
@@ -475,7 +491,7 @@ html, body {
     color: #fff;
     line-height: 26px;
     transition: all 0.2s ease;
-    margin: 1px;
+    margin: 0;
 }
 
 .pan-btn:hover {
@@ -877,7 +893,7 @@ html, body {
 .help-button {
     position: absolute;
     top: 20px;
-    left: 20px;
+    right: 20px;
     width: 40px;
     height: 40px;
     border-radius: 50%;
