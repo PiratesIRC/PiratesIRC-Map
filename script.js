@@ -177,6 +177,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get grid reference for this location
         const gridRef = getGridReference(mapX, mapY);
 
+        // Check if we're in column R (rightmost column, index 17)
+        const isColumnR = gridRef && gridRef.major.startsWith('R');
+
         // Clear existing content
         mapTooltip.innerHTML = '';
 
@@ -260,7 +263,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalXOffset = tooltipXOffset_map;
 
         const tooltipScreenWidth = tooltipWidth / scale;
-        if (pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
+        // Force tooltip to the left for column R, or if it would go off screen
+        if (isColumnR || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
             finalXOffset = -tooltipXOffset_map - tooltipWidth_map;
         }
 
@@ -864,6 +868,90 @@ document.addEventListener('DOMContentLoaded', () => {
         miniMapViewport.style.height = (visibleHeight * scaleY) + 'px';
     }
 
+    // --- Easter Egg Dialog Function ---
+    function showEasterEggDialog(message, duration = 5000) {
+        // Create dialog element if it doesn't exist
+        let easterEggDialog = document.getElementById('easter-egg-dialog');
+        if (!easterEggDialog) {
+            easterEggDialog = document.createElement('div');
+            easterEggDialog.id = 'easter-egg-dialog';
+            easterEggDialog.className = 'easter-egg-dialog';
+            document.body.appendChild(easterEggDialog);
+        }
+
+        // Set message and show dialog
+        easterEggDialog.textContent = message;
+        easterEggDialog.style.display = 'block';
+        easterEggDialog.style.opacity = '1';
+
+        // Hide after duration
+        setTimeout(() => {
+            easterEggDialog.style.opacity = '0';
+            setTimeout(() => {
+                easterEggDialog.style.display = 'none';
+            }, 300);
+        }, duration);
+    }
+
+    // --- Secret Code Checker ---
+    function checkSecretCode(code) {
+        // Obfuscated secret codes (base64 encoded)
+        const secrets = {
+            // "test" encoded
+            'dGVzdA==': () => {
+                showEasterEggDialog("What ye testin'?", 5000);
+            },
+            // "show me the money" encoded
+            'c2hvdyBtZSB0aGUgbW9uZXk=': () => {
+                // Zoom to H4-4-3
+                // H = column 7 (0-indexed), 4 = row 3 (0-indexed)
+                // Sub-grid: 4-3
+                const col = 7;
+                const row = 3;
+                const subCol = 4;
+                const subRow = 3;
+
+                const cellX = GRID_START_X + (col * CELL_WIDTH) + ((subCol - 1) * (CELL_WIDTH / SUBGRID_DIVISIONS));
+                const cellY = GRID_START_Y + (row * CELL_HEIGHT) + ((subRow - 1) * (CELL_HEIGHT / SUBGRID_DIVISIONS));
+
+                // Center on the sub-cell
+                const targetX = cellX + (CELL_WIDTH / SUBGRID_DIVISIONS / 2);
+                const targetY = cellY + (CELL_HEIGHT / SUBGRID_DIVISIONS / 2);
+
+                focusOnPoint(targetX, targetY);
+            },
+            // Pirate tale easter egg
+            'cGlyYXRlIHRhbGU=': () => {
+                const pirateMessage = `Ahoy, ye swabs! Old One-Eyed Silas knows the tale ye seek: the lost hoard of Captain 'Shark-Tooth' Malone. He left no map, blast his eyes, only a riddle that twists the mind!
+
+It starts: "Find the gold where the parrot sings at midnight, but only when the moon is a sliver of cheese."
+
+Simple, ye say? Bah! Crews searched every roost from here to Singapore! They found parrots on Smuggler's Isle, but the moon was full! They tore apart a tavern called 'The Singing Parrot' on Tortuga... found naught but spilt rum! They were cursed, followin' a bird!
+
+Then, one clever matey, 'Half-Wit' Finn, he finds the rest of the riddle, burned into an old powder keg:
+
+"...And the tide forgets to turn, Look beneath the mermaid's tear, Where the island's fires burn."
+
+"The doldrums!" cries Finn, "Where the tide stands still!" So they sailed 'til the wind died. And there, they found an isle! It had a weep-in' waterfall (the "tear"!) and a smokin' volcano (the "fire"!).
+
+They dug like madmen beneath that waterfall. Thud! A chest! They smashed the lock, greedy hands rootin' for doubloons...
+
+But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's own scrawl, it read:
+
+"Ye found the spot, ye clever dogs! But this ain't it! The real treasure... that's buried where the parrot sings at midnight, but only when the moon is a sliver of cheese..."`;
+                showEasterEggDialog(pirateMessage, 3000);
+            }
+        };
+
+        // Encode the code to check against secrets
+        const encoded = btoa(code);
+        if (secrets[encoded]) {
+            secrets[encoded]();
+            return true;
+        }
+        return false;
+    }
+
     // --- Search/Filter Functions ---
     function filterItems() {
         const searchTerm = searchBox.value.toLowerCase().trim();
@@ -1078,6 +1166,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Search box events
     searchBox.addEventListener('input', filterItems);
+
+    // Check for secret codes on Enter key
+    searchBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const searchTerm = searchBox.value.toLowerCase().trim();
+            if (searchTerm && checkSecretCode(searchTerm)) {
+                // Secret code found, clear the search box
+                setTimeout(() => {
+                    searchBox.value = '';
+                    clearSearchBtn.style.display = 'none';
+                    filterItems();
+                }, 100);
+            }
+        }
+    });
+
     clearSearchBtn.addEventListener('click', clearSearch);
 
     // Reset view button
@@ -1109,7 +1213,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
     // Easter egg: Version badge click
-    versionBadge.addEventListener('click', () => {
+    versionBadge.addEventListener('click', (e) => {
+        // Prevent event from bubbling to map viewport
+        e.stopPropagation();
+
         // Close help dialog
         helpModal.style.display = 'none';
         versionBadge.style.display = 'none';
