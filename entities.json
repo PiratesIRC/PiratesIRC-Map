@@ -1,5 +1,9 @@
 [
   {
+    "_metadata": true,
+    "lastUpdated": "10/26/2025"
+  },
+  {
     "id": "ship-001",
     "name": "HMS Victory",
     "description": "A 104-gun first-rate ship of the line of the Royal Navy. (England)",
