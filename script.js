@@ -305,10 +305,19 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         const terrainIcon = terrainIcons[gridRef.terrain] || '❓';
 
+        // Display name mapping (change "both" to "Coastal")
+        const terrainDisplayNames = {
+            'both': 'Coastal',
+            'land': 'land',
+            'water': 'water',
+            'unknown': 'unknown'
+        };
+        const terrainDisplay = terrainDisplayNames[gridRef.terrain] || gridRef.terrain;
+
         coordinateTooltip.innerHTML = `
             <div class="coord-main">${gridRef.full}</div>
             <div class="coord-latlon">${gridRef.latitude}°N, ${gridRef.longitude}°W</div>
-            <div class="coord-terrain">${terrainIcon} ${gridRef.terrain}</div>
+            <div class="coord-terrain">${terrainIcon} ${terrainDisplay}</div>
         `;
         coordinateTooltip.style.left = mapX + 'px';
         coordinateTooltip.style.top = mapY + 'px';
@@ -875,20 +884,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!easterEggDialog) {
             easterEggDialog = document.createElement('div');
             easterEggDialog.id = 'easter-egg-dialog';
-            easterEggDialog.className = 'easter-egg-dialog';
+            easterEggDialog.className = 'easter-egg-dialog hidden';
             document.body.appendChild(easterEggDialog);
         }
 
         // Set message and show dialog
         easterEggDialog.textContent = message;
-        easterEggDialog.style.display = 'block';
-        easterEggDialog.style.opacity = '1';
+        easterEggDialog.classList.remove('hidden');
+        // Use setTimeout to trigger transition after display change
+        setTimeout(() => {
+            easterEggDialog.classList.add('visible');
+        }, 10);
 
         // Hide after duration
         setTimeout(() => {
-            easterEggDialog.style.opacity = '0';
+            easterEggDialog.classList.remove('visible');
             setTimeout(() => {
-                easterEggDialog.style.display = 'none';
+                easterEggDialog.classList.add('hidden');
             }, 300);
         }, duration);
     }
@@ -944,10 +956,17 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         };
 
         // Encode the code to check against secrets
-        const encoded = btoa(code);
-        if (secrets[encoded]) {
-            secrets[encoded]();
-            return true;
+        // Wrap in try-catch to handle btoa() exceptions for non-Latin1 characters
+        try {
+            const encoded = btoa(code);
+            if (secrets[encoded]) {
+                secrets[encoded]();
+                return true;
+            }
+        } catch (e) {
+            // btoa() throws InvalidCharacterError for characters outside Latin1 range
+            // Silently ignore - not a valid secret code
+            return false;
         }
         return false;
     }
@@ -955,7 +974,11 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
     // --- Search/Filter Functions ---
     function filterItems() {
         const searchTerm = searchBox.value.toLowerCase().trim();
-        clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
+        if (searchTerm) {
+            clearSearchBtn.classList.remove('hidden');
+        } else {
+            clearSearchBtn.classList.add('hidden');
+        }
 
         const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
         const items = document.querySelectorAll(`#${activeTab}-content .port-item`);
@@ -997,10 +1020,10 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
     versionBadge.textContent = `v${getVersionNumber()}`;
 
     setInterval(() => {
-        loadingIndicator.style.display = 'flex';
+        loadingIndicator.classList.remove('hidden');
         loadAllData();
         setTimeout(() => {
-            loadingIndicator.style.display = 'none';
+            loadingIndicator.classList.add('hidden');
         }, 1000);
     }, 60000);
 
@@ -1139,9 +1162,9 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         if (e.key === 'Escape') {
             hideMapTooltip();
             coordinateTooltip.style.visibility = 'hidden';
-            if (helpModal.style.display === 'flex') {
-                helpModal.style.display = 'none';
-                versionBadge.style.display = 'none';
+            if (!helpModal.classList.contains('hidden')) {
+                helpModal.classList.add('hidden');
+                versionBadge.classList.add('hidden');
             }
         } else if (e.key === '+' || e.key === '=') {
             e.preventDefault();
@@ -1175,7 +1198,7 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
                 // Secret code found, clear the search box
                 setTimeout(() => {
                     searchBox.value = '';
-                    clearSearchBtn.style.display = 'none';
+                    clearSearchBtn.classList.add('hidden');
                     filterItems();
                 }, 100);
             }
@@ -1189,19 +1212,19 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
 
     // Help modal events
     helpButton.addEventListener('click', () => {
-        helpModal.style.display = 'flex';
-        versionBadge.style.display = 'block';
+        helpModal.classList.remove('hidden');
+        versionBadge.classList.remove('hidden');
     });
 
     helpModalClose.addEventListener('click', () => {
-        helpModal.style.display = 'none';
-        versionBadge.style.display = 'none';
+        helpModal.classList.add('hidden');
+        versionBadge.classList.add('hidden');
     });
 
     helpModal.addEventListener('click', (e) => {
         if (e.target === helpModal) {
-            helpModal.style.display = 'none';
-            versionBadge.style.display = 'none';
+            helpModal.classList.add('hidden');
+            versionBadge.classList.add('hidden');
         }
     });
 
@@ -1218,8 +1241,8 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         e.stopPropagation();
 
         // Close help dialog
-        helpModal.style.display = 'none';
-        versionBadge.style.display = 'none';
+        helpModal.classList.add('hidden');
+        versionBadge.classList.add('hidden');
 
         const effects = [
             // Effect 1: Spin the map
@@ -1296,33 +1319,33 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
             },
             // Effect 8: Jolly Roger flag
             () => {
-                jollyRoger.style.display = 'block';
+                jollyRoger.classList.remove('hidden');
                 jollyRoger.style.animation = 'fade-in-out 4s ease-in-out, wave-flag 0.5s ease-in-out infinite';
                 setTimeout(() => {
-                    jollyRoger.style.display = 'none';
+                    jollyRoger.classList.add('hidden');
                     jollyRoger.style.animation = '';
                 }, 4000);
             },
             // Effect 9: Cannonball attack
             () => {
-                cannonball.style.display = 'block';
+                cannonball.classList.remove('hidden');
                 cannonball.style.animation = 'cannonball-flight 1.5s linear';
                 setTimeout(() => {
                     // Screen shake on impact
                     document.body.style.animation = 'shake 0.3s';
                     setTimeout(() => {
                         document.body.style.animation = '';
-                        cannonball.style.display = 'none';
+                        cannonball.classList.add('hidden');
                         cannonball.style.animation = '';
                     }, 300);
                 }, 1500);
             },
             // Effect 10: The Kraken
             () => {
-                krakenTentacle.style.display = 'block';
+                krakenTentacle.classList.remove('hidden');
                 krakenTentacle.style.animation = 'tentacle-wave 3s ease-in-out';
                 setTimeout(() => {
-                    krakenTentacle.style.display = 'none';
+                    krakenTentacle.classList.add('hidden');
                     krakenTentacle.style.animation = '';
                 }, 3000);
             },
@@ -1531,4 +1554,20 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
             document.querySelectorAll('.terrain-cell').forEach(cell => cell.remove());
         }
     });
+
+    // Prevent click-through to map from toolbar controls
+    const toggleControls = document.querySelector('.toggle-controls');
+    if (toggleControls) {
+        toggleControls.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
+
+    // Prevent click-through to map from zoom slider
+    const zoomSliderContainer = document.querySelector('.zoom-slider-container');
+    if (zoomSliderContainer) {
+        zoomSliderContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
 });

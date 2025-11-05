@@ -9,6 +9,11 @@ html, body {
     color: #f0f0f0;
 }
 
+/* Utility class for hiding elements (replaces inline style="display: none;") */
+.hidden {
+    display: none !important;
+}
+
 /* --- Sidebar Styles --- */
 .sidebar {
     position: absolute;
@@ -835,7 +840,8 @@ html, body {
 }
 
 .zoom-slider {
-    -webkit-appearance: slider-vertical;
+    writing-mode: vertical-lr;
+    direction: rtl;
     width: 20px;
     height: 300px;
     background: linear-gradient(to bottom, rgba(255, 215, 0, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
@@ -1119,10 +1125,13 @@ html, body {
     font-size: 18px;
     line-height: 1.8;
     text-align: center;
-    display: none;
     opacity: 0;
     transition: opacity 0.3s ease;
     white-space: pre-line;
+}
+
+.easter-egg-dialog.visible {
+    opacity: 1;
 }
 
 .copy-coords-btn {
@@ -1255,7 +1264,6 @@ html, body {
     border-radius: 50%;
     z-index: 10000;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    display: none;
 }
 
 @keyframes cannonball-flight {
