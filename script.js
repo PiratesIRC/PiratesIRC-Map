@@ -177,8 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get grid reference for this location
         const gridRef = getGridReference(mapX, mapY);
 
-        // Check if we're in column R (rightmost column, index 17)
-        const isColumnR = gridRef && gridRef.major.startsWith('R');
+        // Check if we're in columns Q or R (rightmost columns, indices 16 and 17)
+        const isRightmostColumns = gridRef && (gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
 
         // Clear existing content
         mapTooltip.innerHTML = '';
@@ -263,9 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalXOffset = tooltipXOffset_map;
 
         const tooltipScreenWidth = tooltipWidth / scale;
-        // Force tooltip to the left for column R, or if it would go off screen
-        if (isColumnR || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
-            finalXOffset = -tooltipXOffset_map - tooltipWidth_map;
+        // Force tooltip to the left for columns Q/R, or if it would go off screen
+        if (isRightmostColumns || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
+            // Add extra offset for rightmost columns to move tooltip significantly left
+            const extraOffset = isRightmostColumns ? (tooltipWidth_map * 0.5) : 0;
+            finalXOffset = -tooltipXOffset_map - tooltipWidth_map - extraOffset;
         }
 
         let finalYOffset = -50;
