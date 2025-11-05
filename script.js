@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapToolbar = document.querySelector('.map-toolbar');
     const zoomSliderPlus = document.getElementById('zoom-slider-plus');
     const zoomSliderMinus = document.getElementById('zoom-slider-minus');
-    const versionDisplay = document.getElementById('version-display');
+    const versionBadge = document.getElementById('version-badge');
 
     // --- Constants ---
     const MAP_WIDTH = 3840;
@@ -903,7 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAllData();
 
     // Set version number
-    versionDisplay.textContent = `v${getVersionNumber()}`;
+    versionBadge.textContent = `v${getVersionNumber()}`;
 
     setInterval(() => {
         loadingIndicator.style.display = 'flex';
@@ -1050,6 +1050,7 @@ document.addEventListener('DOMContentLoaded', () => {
             coordinateTooltip.style.visibility = 'hidden';
             if (helpModal.style.display === 'flex') {
                 helpModal.style.display = 'none';
+                versionBadge.style.display = 'none';
             }
         } else if (e.key === '+' || e.key === '=') {
             e.preventDefault();
@@ -1082,15 +1083,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Help modal events
     helpButton.addEventListener('click', () => {
         helpModal.style.display = 'flex';
+        versionBadge.style.display = 'block';
     });
 
     helpModalClose.addEventListener('click', () => {
         helpModal.style.display = 'none';
+        versionBadge.style.display = 'none';
     });
 
     helpModal.addEventListener('click', (e) => {
         if (e.target === helpModal) {
             helpModal.style.display = 'none';
+            versionBadge.style.display = 'none';
         }
     });
 
@@ -1100,6 +1104,90 @@ document.addEventListener('DOMContentLoaded', () => {
         // Stop propagation to prevent map zoom when scrolling help content
         e.stopPropagation();
     }, { passive: true });
+
+    // Easter egg: Version badge click
+    versionBadge.addEventListener('click', () => {
+        const effects = [
+            // Effect 1: Spin the map
+            () => {
+                mapContainer.style.transition = 'transform 2s ease-in-out';
+                const currentTransform = mapContainer.style.transform;
+                mapContainer.style.transform = currentTransform + ' rotate(360deg)';
+                setTimeout(() => {
+                    mapContainer.style.transition = '';
+                    updateTransform();
+                }, 2000);
+            },
+            // Effect 2: Rainbow colors on all icons
+            () => {
+                const points = document.querySelectorAll('.map-point');
+                const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#8b00ff'];
+                let colorIndex = 0;
+                const interval = setInterval(() => {
+                    points.forEach(point => {
+                        const icon = point.querySelector('.map-icon');
+                        if (icon) {
+                            icon.style.stroke = colors[colorIndex % colors.length];
+                            icon.style.fill = colors[colorIndex % colors.length];
+                        }
+                    });
+                    colorIndex++;
+                }, 200);
+                setTimeout(() => {
+                    clearInterval(interval);
+                    loadAllData(); // Reload to restore original colors
+                }, 3000);
+            },
+            // Effect 3: Shake animation
+            () => {
+                mapContainer.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    mapContainer.style.animation = '';
+                }, 500);
+            },
+            // Effect 4: Random teleport
+            () => {
+                const randomX = Math.random() * MAP_WIDTH;
+                const randomY = Math.random() * MAP_HEIGHT;
+                focusOnPoint(randomX, randomY);
+            },
+            // Effect 5: Disco zoom
+            () => {
+                let count = 0;
+                const interval = setInterval(() => {
+                    scale = MIN_SCALE + Math.random() * (MAX_SCALE - MIN_SCALE);
+                    updateTransform();
+                    count++;
+                    if (count >= 10) {
+                        clearInterval(interval);
+                        resetView();
+                    }
+                }, 200);
+            },
+            // Effect 6: All entities dance
+            () => {
+                const entities = document.querySelectorAll('.map-entity');
+                entities.forEach(entity => {
+                    entity.style.animation = 'bounce 0.5s infinite';
+                });
+                setTimeout(() => {
+                    entities.forEach(entity => {
+                        entity.style.animation = '';
+                    });
+                }, 3000);
+            }
+        ];
+
+        // Pick a random effect
+        const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+        randomEffect();
+
+        // Visual feedback on badge
+        versionBadge.style.animation = 'pulse 0.5s';
+        setTimeout(() => {
+            versionBadge.style.animation = '';
+        }, 500);
+    });
 
     // Zoom slider
     zoomSlider.addEventListener('input', (e) => {

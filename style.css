@@ -444,10 +444,6 @@ html, body {
     border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.toolbar-section-left {
-    gap: 6px;
-}
-
 .toolbar-section:last-child {
     border-right: none;
     padding-right: 0;
@@ -570,13 +566,31 @@ html, body {
     transform: scale(0.95);
 }
 
-/* Version Display */
-.version-display {
-    font-size: 9px;
-    color: #888;
+/* Version Badge (outside help modal in upper right) */
+.version-badge {
+    position: fixed;
+    top: 20px;
+    right: 80px;
+    background-color: rgba(255, 215, 0, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    border-radius: 12px;
+    padding: 6px 12px;
+    color: #ffd700;
     font-family: 'Merriweather', serif;
-    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 1001;
+    cursor: pointer;
+    transition: all 0.2s ease;
     user-select: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.version-badge:hover {
+    background-color: rgba(255, 215, 0, 0.3);
+    border-color: #ffd700;
+    transform: scale(1.05);
+    box-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
 }
 
 /* Current Location Display */
@@ -1145,4 +1159,41 @@ html, body {
     color: #fff;
     border-bottom-color: #ffd700;
     text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+/* Faction icons in help dialog */
+.legend-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    stroke-width: 3px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+
+.legend-icon.spanish path { fill: #ffff00; stroke: #ffff00; }
+.legend-icon.english path { fill: #ff0000; stroke: #ff0000; }
+.legend-icon.french path { fill: #0000ff; stroke: #0000ff; }
+.legend-icon.dutch path { fill: #90ee90; stroke: #90ee90; }
+.legend-icon.pirate path { fill: #ffffff; stroke: #ffffff; stroke-width: 8px; }
+.legend-icon.native path { fill: #e09300; stroke: #e09300; stroke-width: 3px; }
+.legend-icon.jesuit path { fill: #ffffff; stroke: #0082ff; stroke-width: 3px; }
+.legend-icon.infected path { fill: #ff0000; stroke: #ff0000; stroke-width: 2px; }
+.legend-icon.independent path { fill: #ffffff; stroke: #ff00e7; stroke-width: 2px; }
+
+/* Easter egg animations */
+@keyframes shake {
+    0%, 100% { transform: translate(0, 0) scale(var(--scale)); }
+    10%, 30%, 50%, 70%, 90% { transform: translate(-10px, 0) scale(var(--scale)); }
+    20%, 40%, 60%, 80% { transform: translate(10px, 0) scale(var(--scale)); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -60%) scale(1.2); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
 }
