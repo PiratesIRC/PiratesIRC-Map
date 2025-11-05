@@ -90,7 +90,7 @@ html, body {
 
 .clear-search-btn {
     position: absolute;
-    right: 18px;
+    right: 24px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -444,6 +444,10 @@ html, body {
     border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.toolbar-section-left {
+    gap: 6px;
+}
+
 .toolbar-section:last-child {
     border-right: none;
     padding-right: 0;
@@ -564,6 +568,15 @@ html, body {
 
 .reset-btn:active {
     transform: scale(0.95);
+}
+
+/* Version Display */
+.version-display {
+    font-size: 9px;
+    color: #888;
+    font-family: 'Merriweather', serif;
+    text-align: center;
+    user-select: none;
 }
 
 /* Current Location Display */
@@ -1117,4 +1130,19 @@ html, body {
     height: auto;
     display: inline-block;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* PiratesIRC link styling */
+.piratesirc-link {
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.piratesirc-link:hover {
+    color: #fff;
+    border-bottom-color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
 }

@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapToolbar = document.querySelector('.map-toolbar');
     const zoomSliderPlus = document.getElementById('zoom-slider-plus');
     const zoomSliderMinus = document.getElementById('zoom-slider-minus');
+    const versionDisplay = document.getElementById('version-display');
 
     // --- Constants ---
     const MAP_WIDTH = 3840;
@@ -86,6 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Double-click handling
     let lastClickTime = 0;
     const DOUBLE_CLICK_DELAY = 300;
+
+    // --- Helper: Calculate version number from Julian date ---
+    function getVersionNumber() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayOfYear = Math.floor(diff / oneDay);
+        const year = String(now.getFullYear()).slice(-2);
+        return `${year}.${dayOfYear}`;
+    }
 
     // --- Helper: Convert map coordinates to grid reference ---
     function getGridReference(mapX, mapY) {
@@ -802,15 +814,29 @@ document.addEventListener('DOMContentLoaded', () => {
             (GRID_ROWS * CELL_HEIGHT) * scaleY
         );
 
-        // Draw ports as tiny dots
-        document.querySelectorAll('.map-point').forEach(point => {
-            const x = parseFloat(point.style.left);
-            const y = parseFloat(point.style.top);
-            ctx.fillStyle = '#ffd700';
-            ctx.beginPath();
-            ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-        });
+        // Draw ports as tiny dots if toggle is on
+        if (togglePorts.checked) {
+            document.querySelectorAll('.map-point').forEach(point => {
+                const x = parseFloat(point.style.left);
+                const y = parseFloat(point.style.top);
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Draw entities as tiny dots if toggle is on
+        if (toggleEntities.checked) {
+            document.querySelectorAll('.map-entity').forEach(entity => {
+                const x = parseFloat(entity.style.left);
+                const y = parseFloat(entity.style.top);
+                ctx.fillStyle = '#0ff';
+                ctx.beginPath();
+                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
 
         updateMiniMapViewport();
     }
@@ -875,6 +901,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createGridLines();
     loadAllData();
+
+    // Set version number
+    versionDisplay.textContent = `v${getVersionNumber()}`;
 
     setInterval(() => {
         loadingIndicator.style.display = 'flex';
@@ -1065,6 +1094,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Allow mouse wheel scrolling in help modal content
+    const helpModalContent = document.querySelector('.help-modal-content');
+    helpModalContent.addEventListener('wheel', (e) => {
+        // Stop propagation to prevent map zoom when scrolling help content
+        e.stopPropagation();
+    }, { passive: true });
+
     // Zoom slider
     zoomSlider.addEventListener('input', (e) => {
         mapContainer.classList.remove('is-transitioning');
@@ -1205,6 +1241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ports.forEach(port => {
             port.style.display = togglePorts.checked ? 'block' : 'none';
         });
+        drawMiniMap();
     });
 
     toggleEntities.addEventListener('change', () => {
@@ -1212,6 +1249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         entities.forEach(entity => {
             entity.style.display = toggleEntities.checked ? 'block' : 'none';
         });
+        drawMiniMap();
     });
 
     toggleGridlines.addEventListener('change', () => {
