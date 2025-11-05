@@ -944,10 +944,17 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         };
 
         // Encode the code to check against secrets
-        const encoded = btoa(code);
-        if (secrets[encoded]) {
-            secrets[encoded]();
-            return true;
+        // Wrap in try-catch to handle btoa() exceptions for non-Latin1 characters
+        try {
+            const encoded = btoa(code);
+            if (secrets[encoded]) {
+                secrets[encoded]();
+                return true;
+            }
+        } catch (e) {
+            // btoa() throws InvalidCharacterError for characters outside Latin1 range
+            // Silently ignore - not a valid secret code
+            return false;
         }
         return false;
     }
