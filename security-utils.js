@@ -1,5 +1,5 @@
 /**
- * Security Utilities for Caribbean Interactive Map
+ * Security Utilities for PiratesIRC Interactive Map
  * Provides sanitization and validation functions to prevent XSS and other attacks
  */
 
