@@ -414,9 +414,9 @@ html, body {
 
 /* Toggle Controls */
 .toggle-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 3px 8px;
 }
 
 .toggle-item {

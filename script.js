@@ -288,6 +288,10 @@ document.addEventListener('DOMContentLoaded', () => {
             mapElement.classList.remove('highlighted');
             hideMapTooltip();
         });
+
+        mapElement.addEventListener('click', () => {
+            focusOnPoint(data.x, data.y);
+        });
     }
 
     function loadPortData(locations) {
