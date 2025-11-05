@@ -48,6 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const zoomSliderPlus = document.getElementById('zoom-slider-plus');
     const zoomSliderMinus = document.getElementById('zoom-slider-minus');
     const versionBadge = document.getElementById('version-badge');
+    const jollyRoger = document.getElementById('jolly-roger');
+    const cannonball = document.getElementById('cannonball');
+    const krakenTentacle = document.getElementById('kraken-tentacle');
 
     // --- Constants ---
     const MAP_WIDTH = 3840;
@@ -1107,6 +1110,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Easter egg: Version badge click
     versionBadge.addEventListener('click', () => {
+        // Close help dialog
+        helpModal.style.display = 'none';
+        versionBadge.style.display = 'none';
+
         const effects = [
             // Effect 1: Spin the map
             () => {
@@ -1175,6 +1182,64 @@ document.addEventListener('DOMContentLoaded', () => {
                         entity.style.animation = '';
                     });
                 }, 3000);
+            },
+            // Effect 7: Redirect to YouTube video
+            () => {
+                window.open('https://youtu.be/xMeLqP1A5O4', '_blank');
+            },
+            // Effect 8: Jolly Roger flag
+            () => {
+                jollyRoger.style.display = 'block';
+                jollyRoger.style.animation = 'fade-in-out 4s ease-in-out, wave-flag 0.5s ease-in-out infinite';
+                setTimeout(() => {
+                    jollyRoger.style.display = 'none';
+                    jollyRoger.style.animation = '';
+                }, 4000);
+            },
+            // Effect 9: Cannonball attack
+            () => {
+                cannonball.style.display = 'block';
+                cannonball.style.animation = 'cannonball-flight 1.5s linear';
+                setTimeout(() => {
+                    // Screen shake on impact
+                    document.body.style.animation = 'shake 0.3s';
+                    setTimeout(() => {
+                        document.body.style.animation = '';
+                        cannonball.style.display = 'none';
+                        cannonball.style.animation = '';
+                    }, 300);
+                }, 1500);
+            },
+            // Effect 10: The Kraken
+            () => {
+                krakenTentacle.style.display = 'block';
+                krakenTentacle.style.animation = 'tentacle-wave 3s ease-in-out';
+                setTimeout(() => {
+                    krakenTentacle.style.display = 'none';
+                    krakenTentacle.style.animation = '';
+                }, 3000);
+            },
+            // Effect 11: Cannon fire sound
+            () => {
+                const audio = new Audio('https://piratesirc.com/sounds/cannon-fired1.mp3');
+                audio.play().catch(err => console.log('Audio play failed:', err));
+            },
+            // Effect 12: Pirate cheer
+            () => {
+                const audio = new Audio('https://piratesirc.com/sounds/cheer1.mp3');
+                audio.play().catch(err => console.log('Audio play failed:', err));
+            },
+            // Effect 13: Background music
+            () => {
+                const audio = new Audio('https://piratesirc.com/sounds/Drunken_Sailor.mid');
+                audio.loop = true;
+                audio.volume = 0.3;
+                audio.play().catch(err => console.log('Audio play failed:', err));
+                // Stop after 30 seconds
+                setTimeout(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }, 30000);
             }
         ];
 
