@@ -259,13 +259,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const pointCenterY_screen = rect.top + (rect.height / 2);
 
         const tooltipXOffset_screen = 15;
-        const tooltipXOffset_map = tooltipXOffset_screen / scale;
-        // Tooltip width needs to account for both counter-scaling and map scaling
-        const tooltipWidth_map = tooltipWidth / (scale * scale);
+        const tooltipXOffset_map = tooltipXOffset_screen;
+        // Tooltip width accounts for counter-scaling in transform
+        const tooltipWidth_map = tooltipWidth;
 
         let finalXOffset = tooltipXOffset_map;
 
-        const tooltipScreenWidth = tooltipWidth / scale;
+        const tooltipScreenWidth = tooltipWidth;
         // Force tooltip to the left for columns Q or R, or if it would go off screen
         if (isColumnQorR || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
             finalXOffset = -tooltipXOffset_map - tooltipWidth_map;
@@ -833,6 +833,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Mini-map Functions ---
+    // Helper function to get faction color for minimap
+    function getFactionColor(factionClass) {
+        const colorMap = {
+            'spain': '#ffff00',
+            'spanish': '#ffff00',
+            'england': '#ff0000',
+            'english': '#ff0000',
+            'netherlands': '#90ee90',
+            'dutch': '#90ee90',
+            'france': '#0000ff',
+            'french': '#0000ff',
+            'pirate': '#ffffff',
+            'native': '#D2691E',
+            'jesuit': '#0082ff',
+            'infected': '#8B0000',
+            'independent': '#ff00ff'
+        };
+        return colorMap[factionClass] || '#ffd700'; // Default gold
+    }
+
+    // Helper function to get entity type color for minimap
+    function getEntityTypeColor(entityId) {
+        // Check if entity has ship in its id
+        if (entityId && entityId.includes('ship-')) {
+            return '#00ff00'; // Green for ships
+        }
+        return '#ff00ff'; // Magenta for weather/other entities
+    }
+
     function drawMiniMap() {
         const ctx = miniMapCanvas.getContext('2d');
         const canvas = miniMapCanvas;
@@ -856,33 +885,36 @@ document.addEventListener('DOMContentLoaded', () => {
             (GRID_ROWS * CELL_HEIGHT) * scaleY
         );
 
-        // Draw ports as tiny dots if toggle is on
+        // Draw ports as tiny dots with faction colors if toggle is on
         if (togglePorts.checked) {
             document.querySelectorAll('.map-point').forEach(point => {
                 const x = parseFloat(point.style.left);
                 const y = parseFloat(point.style.top);
-                ctx.fillStyle = '#ffd700';
+                // Get faction class from element classes
+                const factionClass = Array.from(point.classList).find(cls => cls !== 'map-point');
+                ctx.fillStyle = getFactionColor(factionClass);
                 ctx.beginPath();
                 ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
 
-        // Draw entities as tiny dots if toggle is on
+        // Draw entities as tiny dots with type-based colors if toggle is on
         if (toggleEntities.checked) {
             document.querySelectorAll('.map-entity').forEach(entity => {
                 const x = parseFloat(entity.style.left);
                 const y = parseFloat(entity.style.top);
-                ctx.fillStyle = '#0ff';
+                const entityId = entity.id;
+                ctx.fillStyle = getEntityTypeColor(entityId);
                 ctx.beginPath();
                 ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
 
-        // Draw coastal tiles if only terrain is selected
+        // Draw coastal tiles if only terrain is selected (darker color)
         if (toggleTerrain.checked && !togglePorts.checked && !toggleEntities.checked) {
-            ctx.fillStyle = '#d4a574'; // Sandy/beige color for coastal tiles
+            ctx.fillStyle = '#8b6f47'; // Darker sandy/brown color for coastal tiles
 
             // Iterate through terrain data to find coastal tiles
             for (const [key, terrain] of Object.entries(terrainData)) {

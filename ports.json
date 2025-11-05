@@ -5,15 +5,19 @@
     "country": "England",
     "x": 3605,
     "y": 1495,
-    "description": "English city \ud83c\udfe2 n' claimed by Black Pearl"
+    "description": "English city 🏢 n' claimed by Black Pearl",
+    "lat": 16.83,
+    "long": -61.71
   },
   {
     "id": "barbados",
     "city": "Barbados",
     "country": "Pirate",
-	"x": 3813.75,
-	"y": 1879.89,
-    "description": "Pirate haven \ud83d\udd71 n' claimed by Rising Sun"
+    "x": 3814,
+    "y": 1880,
+    "description": "Pirate haven 🕱 n' claimed by Rising Sun",
+    "lat": 14.21,
+    "long": -60.19
   },
   {
     "id": "bermuda",
@@ -21,23 +25,29 @@
     "country": "Independent",
     "x": 3400,
     "y": 76,
-    "description": "Spanish city \ud83c\udfe2 n' claimed by Rising Sun"
+    "description": "Spanish city 🏢 n' claimed by Rising Sun",
+    "lat": 26.48,
+    "long": -63.21
   },
   {
     "id": "campeche",
     "city": "Campeche",
     "country": "Jesuit",
-	"x": 716.75,
-	"y": 1204.56,
-    "description": "Spanish town \ud83c\udfe0 n' claimed by The Wandering Soul"
+    "x": 717,
+    "y": 1205,
+    "description": "Spanish town 🏠 n' claimed by The Wandering Soul",
+    "lat": 18.8,
+    "long": -82.77
   },
   {
     "id": "caracas",
     "city": "Caracas",
     "country": "Native",
-	"x": 3304.00,
-	"y": 2151.18,
-    "description": "Dutch city \ud83c\udfe2 n' claimed by The Wandering Soul"
+    "x": 3304,
+    "y": 2151,
+    "description": "Dutch city 🏢 n' claimed by The Wandering Soul",
+    "lat": 12.36,
+    "long": -63.91
   },
   {
     "id": "cartagena",
@@ -45,15 +55,19 @@
     "country": "Spain",
     "x": 2205,
     "y": 2117,
-    "description": "Spanish town \ud83c\udfe0 n' claimed by Black Pearl"
+    "description": "Spanish town 🏠 n' claimed by Black Pearl",
+    "lat": 12.59,
+    "long": -71.92
   },
   {
     "id": "coro",
     "city": "Coro",
     "country": "France",
-	"x": 2799.75,
-	"y": 2014.41,
-    "description": "French town \ud83c\udfe0 n' claimed by The Wandering Soul"
+    "x": 2800,
+    "y": 2014,
+    "description": "French town 🏠 n' claimed by The Wandering Soul",
+    "lat": 13.29,
+    "long": -67.58
   },
   {
     "id": "cumana",
@@ -61,63 +75,79 @@
     "country": "Spain",
     "x": 3343,
     "y": 2126,
-    "description": "Spanish town \ud83c\udfe0 n' claimed by The Wandering Soul"
+    "description": "Spanish town 🏠 n' claimed by The Wandering Soul",
+    "lat": 12.53,
+    "long": -63.62
   },
   {
     "id": "curacao",
     "city": "Curacao",
     "country": "France",
-	"x": 2868.75,
-	"y": 1947.64,
-    "description": "French town \ud83c\udfe0 n' claimed by The Wandering Soul"
+    "x": 2869,
+    "y": 1948,
+    "description": "French town 🏠 n' claimed by The Wandering Soul",
+    "lat": 13.74,
+    "long": -67.08
   },
   {
     "id": "eluthera",
     "city": "Eluthera",
     "country": "Netherlands",
-	"x": 2176.25,
-	"y": 677.00,
-    "description": "Dutch town \ud83c\udfe0 n' claimed by Rising Sun"
+    "x": 2176,
+    "y": 677,
+    "description": "Dutch town 🏠 n' claimed by Rising Sun",
+    "lat": 22.39,
+    "long": -72.13
   },
   {
     "id": "florida-keys",
     "city": "Florida Keys",
     "country": "Netherlands",
-	"x": 1571.13,
-	"y": 726.76,
-    "description": "Dutch city \ud83c\udfe2 n' claimed by The Valencia"
+    "x": 1571,
+    "y": 727,
+    "description": "Dutch city 🏢 n' claimed by The Valencia",
+    "lat": 22.05,
+    "long": -76.54
   },
   {
     "id": "gibraltar",
     "city": "Gibraltar",
     "country": "England",
-	"x": 2670.75,
-	"y": 2238.96,
-    "description": "English town \ud83c\udfe0 n' claimed by The Wandering Soul"
+    "x": 2671,
+    "y": 2239,
+    "description": "English town 🏠 n' claimed by The Wandering Soul",
+    "lat": 11.76,
+    "long": -68.52
   },
   {
     "id": "gran-grenada",
     "city": "Gran Grenada",
     "country": "England",
-	"x": 1160.75,
-	"y": 1942.68,
-    "description": "English city \ud83c\udfe2 n' be unclaimed"
+    "x": 1161,
+    "y": 1943,
+    "description": "English city 🏢 n' be unclaimed",
+    "lat": 13.78,
+    "long": -79.53
   },
   {
     "id": "grand-bahama",
     "city": "Grand Bahama",
     "country": "Netherlands",
-	"x": 1927.50,
-	"y": 485.56,
-    "description": "Dutch town \ud83c\udfe0 n' be unclaimed"
+    "x": 1928,
+    "y": 486,
+    "description": "Dutch town 🏠 n' be unclaimed",
+    "lat": 23.69,
+    "long": -73.94
   },
   {
     "id": "guadeloupe",
     "city": "Guadeloupe",
     "country": "Spain",
-	"x": 3620.25,
-	"y": 1589.31,
-    "description": "Spanish stronghold \ud83c\udfd9 n' be unclaimed"
+    "x": 3620,
+    "y": 1589,
+    "description": "Spanish stronghold 🏙 n' be unclaimed",
+    "lat": 16.19,
+    "long": -61.6
   },
   {
     "id": "havana",
@@ -125,47 +155,59 @@
     "country": "France",
     "x": 1518,
     "y": 875,
-    "description": "French town \ud83c\udfe0 n' claimed by Rising Sun"
+    "description": "French town 🏠 n' claimed by Rising Sun",
+    "lat": 21.05,
+    "long": -76.93
   },
   {
     "id": "leogane",
     "city": "Leogane",
     "country": "Netherlands",
-	"x": 2512.31,
-	"y": 1370.91,
-    "description": "Dutch town \ud83c\udfe0 n' claimed by The Valencia"
+    "x": 2512,
+    "y": 1371,
+    "description": "Dutch town 🏠 n' claimed by The Valencia",
+    "lat": 17.67,
+    "long": -69.68
   },
   {
     "id": "maracaibo",
     "city": "Maracaibo",
     "country": "England",
-	"x": 2599.75,
-	"y": 2093.93,
-    "description": "English town \ud83c\udfe0 n' claimed by The Wandering Soul"
+    "x": 2600,
+    "y": 2094,
+    "description": "English town 🏠 n' claimed by The Wandering Soul",
+    "lat": 12.75,
+    "long": -69.04
   },
   {
     "id": "margarita",
     "city": "Margarita",
     "country": "France",
-	"x": 3341.81,
-	"y": 2073.98,
-    "description": "French town \ud83c\udfe0 n' claimed by The Wandering Soul"
+    "x": 3342,
+    "y": 2074,
+    "description": "French town 🏠 n' claimed by The Wandering Soul",
+    "lat": 12.89,
+    "long": -63.63
   },
   {
     "id": "martinique",
     "city": "Martinique",
     "country": "England",
-	"x": 3680.13,
-	"y": 1739.71,
-    "description": "English town \ud83c\udfe0 n' be unclaimed"
+    "x": 3680,
+    "y": 1740,
+    "description": "English town 🏠 n' be unclaimed",
+    "lat": 15.16,
+    "long": -61.17
   },
   {
     "id": "montserrat",
     "city": "Montserrat",
     "country": "Spain",
-	"x": 3561.50,
-	"y": 1538.84,
-    "description": "Spanish town \ud83c\udfe0 n' be unclaimed"
+    "x": 3562,
+    "y": 1539,
+    "description": "Spanish town 🏠 n' be unclaimed",
+    "lat": 16.53,
+    "long": -62.03
   },
   {
     "id": "nassau",
@@ -173,87 +215,109 @@
     "country": "Spain",
     "x": 2036,
     "y": 669,
-    "description": "Spanish city \ud83c\udfe2 n' be unclaimed"
+    "description": "Spanish city 🏢 n' be unclaimed",
+    "lat": 22.45,
+    "long": -73.15
   },
   {
     "id": "nevis",
     "city": "Nevis",
     "country": "England",
-	"x": 3522.50,
-	"y": 1500.82,
-    "description": "English city \ud83c\udfe2 n' be unclaimed"
+    "x": 3522,
+    "y": 1501,
+    "description": "English city 🏢 n' be unclaimed",
+    "lat": 16.79,
+    "long": -62.32
   },
   {
     "id": "nombre-de-dios",
     "city": "Nombre de Dios",
     "country": "France",
-	"x": 1796.38,
-	"y": 2197.20,
-    "description": "French town \ud83c\udfe0 n' claimed by Mousey McMouseface"
+    "x": 1796,
+    "y": 2197,
+    "description": "French town 🏠 n' claimed by Mousey McMouseface",
+    "lat": 12.05,
+    "long": -74.9
   },
   {
     "id": "panama",
     "city": "Panama",
     "country": "Spain",
-	"x": 1762.50,
-	"y": 2270.70,
-    "description": "Spanish city \ud83c\udfe2 n' claimed by Mousey McMouseface"
+    "x": 1762,
+    "y": 2271,
+    "description": "Spanish city 🏢 n' claimed by Mousey McMouseface",
+    "lat": 11.54,
+    "long": -75.15
   },
   {
     "id": "petit-goave",
     "city": "Petit Goave",
     "country": "Netherlands",
-	"x": 2485.75,
-	"y": 1405.14,
-    "description": "Dutch city \ud83c\udfe2 n' claimed by Rising Sun"
+    "x": 2486,
+    "y": 1405,
+    "description": "Dutch city 🏢 n' claimed by Rising Sun",
+    "lat": 17.44,
+    "long": -69.87
   },
   {
     "id": "port-de-paix",
     "city": "Port-de-Paix",
     "country": "France",
-	"x": 2486.19,
-	"y": 1223.76,
-    "description": "French town \ud83c\udfe0 n' claimed by Rising Sun"
+    "x": 2486,
+    "y": 1224,
+    "description": "French town 🏠 n' claimed by Rising Sun",
+    "lat": 18.67,
+    "long": -69.87
   },
   {
     "id": "port-royal",
     "city": "Port Royal",
     "country": "England",
-	"x": 2094.25,
-	"y": 1419.28,
-    "description": "Known as the 'richest and wickedest city in the world.' A major English port."
+    "x": 2094,
+    "y": 1419,
+    "description": "Known as the 'richest and wickedest city in the world.' A major English port.",
+    "lat": 17.34,
+    "long": -72.73
   },
   {
     "id": "puerto-bello",
     "city": "Puerto Bello",
     "country": "England",
-	"x": 3057.50,
-	"y": 2111.15,
-    "description": "English town \ud83c\udfe0 n' claimed by Mousey McMouseface"
+    "x": 3058,
+    "y": 2111,
+    "description": "English town 🏠 n' claimed by Mousey McMouseface",
+    "lat": 12.63,
+    "long": -65.7
   },
   {
     "id": "puerto-cabello",
     "city": "Puerto Cabello",
     "country": "Spain",
-	"x": 2978.00,
-	"y": 2126.43,
-    "description": "Spanish town \ud83c\udfe0 n' claimed by The Wandering Soul"
+    "x": 2978,
+    "y": 2126,
+    "description": "Spanish town 🏠 n' claimed by The Wandering Soul",
+    "lat": 12.53,
+    "long": -66.29
   },
   {
     "id": "puerto-principe",
     "city": "Puerto Principe",
     "country": "Netherlands",
-	"x": 1956.00,
-	"y": 1070.08,
-    "description": "Dutch city \ud83c\udfe2 n' be unclaimed"
+    "x": 1956,
+    "y": 1070,
+    "description": "Dutch city 🏢 n' be unclaimed",
+    "lat": 19.72,
+    "long": -73.74
   },
   {
     "id": "rio-de-la-hacha",
     "city": "Rio de la Hacha",
     "country": "England",
-	"x": 2495.25,
-	"y": 1996.38,
-    "description": "English city \ud83c\udfe2 n' claimed by Rising Sun"
+    "x": 2495,
+    "y": 1996,
+    "description": "English city 🏢 n' claimed by Rising Sun",
+    "lat": 13.42,
+    "long": -69.81
   },
   {
     "id": "san-juan",
@@ -261,31 +325,39 @@
     "country": "Infected",
     "x": 3176,
     "y": 1376,
-    "description": "Infected city \ud83c\udfe2 n' claimed by The Valencia"
+    "description": "Infected city 🏢 n' claimed by The Valencia",
+    "lat": 17.64,
+    "long": -64.84
   },
   {
     "id": "santa-catalina",
     "city": "Santa Catalina",
     "country": "Netherlands",
-	"x": 1582.50,
-	"y": 1826.78,
-    "description": "Dutch city \ud83c\udfe2 n' claimed by Mousey McMouseface"
+    "x": 1582,
+    "y": 1827,
+    "description": "Dutch city 🏢 n' claimed by Mousey McMouseface",
+    "lat": 14.57,
+    "long": -76.46
   },
   {
     "id": "santa-marta",
     "city": "Santa Marta",
     "country": "Spain",
-	"x": 2329.13,
-	"y": 2035.47,
-    "description": "Spanish town \ud83c\udfe0 n' claimed by The Wandering Soul"
+    "x": 2329,
+    "y": 2035,
+    "description": "Spanish town 🏠 n' claimed by The Wandering Soul",
+    "lat": 13.15,
+    "long": -71.02
   },
   {
     "id": "santiago-de-la-vega",
     "city": "Santiago de La Vega",
     "country": "Netherlands",
-	"x": 2093.25,
-	"y": 1418.82,
-    "description": "Dutch town \ud83c\udfe0 n' be unclaimed"
+    "x": 2093,
+    "y": 1419,
+    "description": "Dutch town 🏠 n' be unclaimed",
+    "lat": 17.34,
+    "long": -72.74
   },
   {
     "id": "santiago",
@@ -293,39 +365,49 @@
     "country": "France",
     "x": 2190,
     "y": 1225,
-    "description": "French city \ud83c\udfe2 n' claimed by The Valencia"
+    "description": "French city 🏢 n' claimed by The Valencia",
+    "lat": 18.66,
+    "long": -72.03
   },
   {
     "id": "santo-domingo",
     "city": "Santo Domingo",
     "country": "Netherlands",
-	"x": 2783.00,
-	"y": 1378.44,
-    "description": "Dutch city \ud83c\udfe2 n' claimed by The Valencia"
+    "x": 2783,
+    "y": 1378,
+    "description": "Dutch city 🏢 n' claimed by The Valencia",
+    "lat": 17.62,
+    "long": -67.71
   },
   {
     "id": "sint-maarten",
     "city": "Sint Maarten",
     "country": "England",
-	"x": 3476.13,
-	"y": 1413.93,
-    "description": "English city \ud83c\udfe2 n' be unclaimed"
+    "x": 3476,
+    "y": 1414,
+    "description": "English city 🏢 n' be unclaimed",
+    "lat": 17.38,
+    "long": -62.65
   },
   {
     "id": "st-augustine",
     "city": "St Augustine",
     "country": "Netherlands",
-	"x": 1603.75,
-	"y": 70.75,
-    "description": "Dutch town \ud83c\udfe0 n' claimed by The Elite"
+    "x": 1604,
+    "y": 71,
+    "description": "Dutch town 🏠 n' claimed by The Elite",
+    "lat": 26.52,
+    "long": -76.3
   },
   {
     "id": "st-eustatius",
     "city": "St Eustatius",
     "country": "Netherlands",
-	"x": 3489.00,
-	"y": 1466.55,
-    "description": "Dutch city \ud83c\udfe2 n' be unclaimed"
+    "x": 3489,
+    "y": 1467,
+    "description": "Dutch city 🏢 n' be unclaimed",
+    "lat": 17.02,
+    "long": -62.56
   },
   {
     "id": "st-kitts",
@@ -333,23 +415,29 @@
     "country": "Independent",
     "x": 3500,
     "y": 1470,
-    "description": "Independent city \ud83c\udfe2 n' claimed by Black Pearl"
+    "description": "Independent city 🏢 n' claimed by Black Pearl",
+    "lat": 17.0,
+    "long": -62.48
   },
   {
     "id": "st-martin",
     "city": "St Martin",
     "country": "Spain",
-	"x": 3461.31,
-	"y": 1389.09,
-    "description": "Spanish town \ud83c\udfe0 n' be unclaimed"
+    "x": 3461,
+    "y": 1389,
+    "description": "Spanish town 🏠 n' be unclaimed",
+    "lat": 17.55,
+    "long": -62.76
   },
   {
     "id": "tortuga",
     "city": "Tortuga",
     "country": "France",
-	"x": 2502.75,
-	"y": 1206.91,
-    "description": "French town \ud83c\udfe0 n' claimed by The Valencia"
+    "x": 2503,
+    "y": 1207,
+    "description": "French town 🏠 n' claimed by The Valencia",
+    "lat": 18.79,
+    "long": -69.75
   },
   {
     "id": "trinidad",
@@ -357,22 +445,28 @@
     "country": "Infected",
     "x": 3626,
     "y": 2117,
-    "description": "Infected city \ud83c\udfe2 n' be unclaimed"
+    "description": "Infected city 🏢 n' be unclaimed",
+    "lat": 12.59,
+    "long": -61.56
   },
   {
     "id": "veracruz",
     "city": "Veracruz",
     "country": "Netherlands",
-	"x": 236.00,
-	"y": 1264.08,
-    "description": "Dutch city \ud83c\udfe2 n' claimed by The Flying Dragon"
+    "x": 236,
+    "y": 1264,
+    "description": "Dutch city 🏢 n' claimed by The Flying Dragon",
+    "lat": 18.4,
+    "long": -86.28
   },
   {
     "id": "villa-hermosa",
     "city": "Villa Hermosa",
     "country": "Spain",
-	"x": 530.00,
-	"y": 1353.63,
-    "description": "Spanish town \ud83c\udfe0 n' be unclaimed"
+    "x": 530,
+    "y": 1354,
+    "description": "Spanish town 🏠 n' be unclaimed",
+    "lat": 17.79,
+    "long": -84.14
   }
 ]
