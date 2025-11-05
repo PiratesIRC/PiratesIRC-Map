@@ -898,11 +898,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Obfuscated secret codes (base64 encoded)
         const secrets = {
             // "test" encoded
-            dGVzdA: () => {
+            'dGVzdA==': () => {
                 showEasterEggDialog("What ye testin'?", 5000);
             },
             // "show me the money" encoded
-            c2hvdyBtZSB0aGUgbW9uZXk: () => {
+            'c2hvdyBtZSB0aGUgbW9uZXk=': () => {
                 // Zoom to H4-4-3
                 // H = column 7 (0-indexed), 4 = row 3 (0-indexed)
                 // Sub-grid: 4-3
@@ -920,8 +920,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 focusOnPoint(targetX, targetY);
             },
-            // Pirate tale easter egg (will add the trigger code later)
-            cGlyYXRlIHRhbGU: () => {
+            // Pirate tale easter egg
+            'cGlyYXRlIHRhbGU=': () => {
                 const pirateMessage = `Ahoy, ye swabs! Old One-Eyed Silas knows the tale ye seek: the lost hoard of Captain 'Shark-Tooth' Malone. He left no map, blast his eyes, only a riddle that twists the mind!
 
 It starts: "Find the gold where the parrot sings at midnight, but only when the moon is a sliver of cheese."
