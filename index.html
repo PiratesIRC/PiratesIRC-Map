@@ -17,19 +17,25 @@
 <body>
 
     <div class="sidebar">
-        
+
         <div class="sidebar-tabs">
             <button class="tab-btn active" data-tab="ports">Ports</button>
             <button class="tab-btn" data-tab="entities">Entities</button>
         </div>
-        
+
+        <!-- Search Box -->
+        <div class="search-container">
+            <input type="text" id="search-box" placeholder="Search ports/entities..." autocomplete="off">
+            <button id="clear-search" class="clear-search-btn" style="display: none;">×</button>
+        </div>
+
         <p class="last-updated">Last Updated: 10/26/2025</p>
 
         <div class="tab-content active" id="ports-content">
             <div class="port-list" id="port-list">
                 </div>
         </div>
-        
+
         <div class="tab-content" id="entities-content">
             <div class="port-list" id="entity-list">
                 </div>
@@ -45,44 +51,243 @@
             <div class="coordinate-tooltip" id="coordinate-tooltip"></div>
         </div>
 
-        <div class="map-toolbar">
-            <div class="toolbar-section">
-                <div class="toolbar-label">Navigation</div>
-                <div class="pan-controls">
-                    <button class="pan-btn" id="pan-up-btn" title="Pan Up">&#8593;</button>
-                    <div>
-                        <button class="pan-btn" id="pan-left-btn" title="Pan Left">&#8592;</button>
-                        <button class="pan-btn" id="pan-right-btn" title="Pan Right">&#8594;</button>
+        <!-- Zoom Slider -->
+        <div class="zoom-slider-container">
+            <div class="zoom-slider-label" id="zoom-slider-plus" title="Zoom In">+</div>
+            <input type="range" id="zoom-slider" class="zoom-slider" min="0.25" max="5" step="0.05" value="0.29" orient="vertical">
+            <div class="zoom-slider-label" id="zoom-slider-minus" title="Zoom Out">-</div>
+        </div>
+
+        <!-- Mini Map -->
+        <div class="mini-map" id="mini-map">
+            <canvas id="mini-map-canvas" width="150" height="98"></canvas>
+            <div class="mini-map-viewport" id="mini-map-viewport"></div>
+        </div>
+
+        <!-- Help Button (moved to upper right) -->
+        <button class="help-button" id="help-button" title="Help & Shortcuts">?</button>
+
+        <!-- Version Display (only visible when help is open) -->
+        <div class="version-badge" id="version-badge" style="display: none;"></div>
+
+        <!-- Easter Egg Elements -->
+        <div class="jolly-roger" id="jolly-roger" style="display: none;">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Skull -->
+                <ellipse cx="100" cy="85" rx="45" ry="50" fill="#ffffff" stroke="#000" stroke-width="3"/>
+                <!-- Eye sockets -->
+                <ellipse cx="85" cy="75" rx="12" ry="15" fill="#000"/>
+                <ellipse cx="115" cy="75" rx="12" ry="15" fill="#000"/>
+                <!-- Nose -->
+                <path d="M 100 90 L 95 105 L 105 105 Z" fill="#000"/>
+                <!-- Mouth -->
+                <line x1="75" y1="115" x2="125" y2="115" stroke="#000" stroke-width="3"/>
+                <line x1="80" y1="115" x2="80" y2="125" stroke="#000" stroke-width="2"/>
+                <line x1="90" y1="115" x2="90" y2="125" stroke="#000" stroke-width="2"/>
+                <line x1="100" y1="115" x2="100" y2="125" stroke="#000" stroke-width="2"/>
+                <line x1="110" y1="115" x2="110" y2="125" stroke="#000" stroke-width="2"/>
+                <line x1="120" y1="115" x2="120" y2="125" stroke="#000" stroke-width="2"/>
+                <!-- Crossbones -->
+                <rect x="60" y="140" width="80" height="15" rx="7" fill="#ffffff" stroke="#000" stroke-width="3" transform="rotate(-30 100 147)"/>
+                <rect x="60" y="140" width="80" height="15" rx="7" fill="#ffffff" stroke="#000" stroke-width="3" transform="rotate(30 100 147)"/>
+            </svg>
+        </div>
+
+        <div class="cannonball" id="cannonball" style="display: none;"></div>
+
+        <div class="kraken-tentacle" id="kraken-tentacle" style="display: none;">
+            <svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Tentacle -->
+                <path d="M 50 200 Q 45 180 50 160 Q 55 140 45 120 Q 40 100 50 80 Q 60 60 50 40 Q 45 20 50 0"
+                      fill="none" stroke="#2d5a3d" stroke-width="20" stroke-linecap="round"/>
+                <path d="M 50 200 Q 48 180 50 160 Q 52 140 48 120 Q 45 100 50 80 Q 55 60 50 40 Q 48 20 50 0"
+                      fill="none" stroke="#3a7050" stroke-width="15" stroke-linecap="round"/>
+                <!-- Suckers -->
+                <circle cx="45" cy="170" r="6" fill="#1a3a2d"/>
+                <circle cx="52" cy="150" r="5" fill="#1a3a2d"/>
+                <circle cx="42" cy="130" r="6" fill="#1a3a2d"/>
+                <circle cx="55" cy="110" r="5" fill="#1a3a2d"/>
+                <circle cx="48" cy="90" r="6" fill="#1a3a2d"/>
+                <circle cx="58" cy="70" r="5" fill="#1a3a2d"/>
+                <circle cx="47" cy="50" r="6" fill="#1a3a2d"/>
+            </svg>
+        </div>
+
+        <!-- Help Modal -->
+        <div class="help-modal" id="help-modal" style="display: none;">
+            <div class="help-modal-content">
+                <button class="help-modal-close" id="help-modal-close">×</button>
+                <h2>Map Controls & Guide</h2>
+
+                <div class="help-section">
+                    <h3>Keyboard Shortcuts</h3>
+                    <div class="help-shortcuts">
+                        <div><kbd>↑ ↓ ← →</kbd> Pan the map</div>
+                        <div><kbd>+ / =</kbd> Zoom in</div>
+                        <div><kbd>- / _</kbd> Zoom out</div>
+                        <div><kbd>ESC</kbd> Close tooltips</div>
                     </div>
-                    <button class="pan-btn" id="pan-down-btn" title="Pan Down">&#8595;</button>
+                </div>
+
+                <div class="help-section">
+                    <h3>Mouse Controls</h3>
+                    <div class="help-shortcuts">
+                        <div>Click marker to center view</div>
+                        <div>Double-click map to zoom in</div>
+                        <div>Scroll wheel to zoom</div>
+                        <div>Drag to pan</div>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3>Copy Coordinates</h3>
+                    <p>Click the 📋 button in tooltips to copy coordinates to clipboard.</p>
+                </div>
+
+                <div class="help-section">
+                    <h3>Faction Icons</h3>
+                    <div class="help-legend faction-icons">
+                        <div class="legend-item">
+                            <svg class="legend-icon spanish" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M24 8 A4 4 0 0 1 24 16 A4 4 0 0 1 24 8 M24 16 L24 40 M12 24 L36 24 M8 36 C8 36 12 44 24 44 C36 44 40 36 40 36 L38 34 C38 34 35 40 24 40 C13 40 10 34 10 34 Z M8 36 L10 34 L8 32 M40 36 L38 34 L40 32" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Spanish
+                        </div>
+                        <div class="legend-item">
+                            <svg class="legend-icon english" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M24 8 A4 4 0 0 1 24 16 A4 4 0 0 1 24 8 M24 16 L24 40 M12 24 L36 24 M8 36 C8 36 12 44 24 44 C36 44 40 36 40 36 L38 34 C38 34 35 40 24 40 C13 40 10 34 10 34 Z M8 36 L10 34 L8 32 M40 36 L38 34 L40 32" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            English
+                        </div>
+                        <div class="legend-item">
+                            <svg class="legend-icon french" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M24 8 A4 4 0 0 1 24 16 A4 4 0 0 1 24 8 M24 16 L24 40 M12 24 L36 24 M8 36 C8 36 12 44 24 44 C36 44 40 36 40 36 L38 34 C38 34 35 40 24 40 C13 40 10 34 10 34 Z M8 36 L10 34 L8 32 M40 36 L38 34 L40 32" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            French
+                        </div>
+                        <div class="legend-item">
+                            <svg class="legend-icon dutch" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M24 8 A4 4 0 0 1 24 16 A4 4 0 0 1 24 8 M24 16 L24 40 M12 24 L36 24 M8 36 C8 36 12 44 24 44 C36 44 40 36 40 36 L38 34 C38 34 35 40 24 40 C13 40 10 34 10 34 Z M8 36 L10 34 L8 32 M40 36 L38 34 L40 32" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Dutch
+                        </div>
+                        <div class="legend-item">
+                            <svg class="legend-icon pirate" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M256 31.203c-96 .797-117.377 76.692-79.434 135.133-6.397 6.534-10.344 15.886-.566 25.664 16 16 32 16 39.852 32.42h80.296C304 208 320 208 336 192c9.778-9.778 5.831-19.13-.566-25.664C373.377 107.896 352 32 256 31.203zm-42.146 101.049c.426-.003.862.007 1.306.03 28.404 1.442 40.84 59.718-10.83 51.095-10.412-1.738-17.355-50.963 9.524-51.125zm84.292 0c26.88.162 19.936 49.387 9.524 51.125C256 192 268.436 133.724 296.84 132.28c.444-.022.88-.032 1.306-.03zM32 144c7.406 88.586 64.475 175.544 156.623 236.797 17.959-7.251 35.767-15.322 50.424-23.877C180.254 319.737 104.939 255.465 32 144zm448 0C359.2 328.605 231.863 383.797 183.908 400.797c3.177 5.374 5.997 10.98 8.711 16.432 3.878 7.789 7.581 15.251 11.184 20.986A517.457 517.457 0 0 0 256 417.973l.168.076a884.617 884.617 0 0 0 9.652-4.65C391.488 353.263 471.156 249.79 480 144zm-224 27.725l20.074 40.15L256 199.328l-20.074 12.547L256 171.725zm-65.604 57.11l15.76 51.042s31.268 24.92 49.844 24.92 49.844-24.92 49.844-24.92l15.76-51.041-27.086 19.236-8.063 16.248S267.35 279.547 256 279.547c-11.35 0-30.455-15.227-30.455-15.227l-8.063-16.248-27.086-19.236zm-59.984 152.976c-.783-.02-1.574-.011-2.375.027l.856 17.978c6.36-.302 10.814 2.416 16.11 8.64 5.298 6.222 10.32 15.707 15.24 25.589 4.918 9.882 9.707 20.12 16.122 28.45 6.415 8.327 16.202 15.446 27.969 13.89l-2.36-17.844c-4.094.541-6.78-1.099-11.349-7.031-4.57-5.933-9.275-15.46-14.268-25.489-4.992-10.029-10.297-20.604-17.644-29.234-6.888-8.09-16.556-14.686-28.3-14.976zm251.176 0c-11.745.29-21.413 6.885-28.3 14.976-7.348 8.63-12.653 19.205-17.645 29.234-4.993 10.03-9.698 19.556-14.268 25.489-4.57 5.932-7.255 7.572-11.35 7.031l-2.359 17.844c11.767 1.556 21.554-5.563 27.969-13.89 6.415-8.33 11.204-18.568 16.123-28.45 4.919-9.882 9.94-19.367 15.238-25.59 5.297-6.223 9.75-8.941 16.111-8.639l.856-17.978a32.853 32.853 0 0 0-2.375-.027zm-55.928 18.107c-13.97 10.003-30.13 18.92-47.424 27.478a524.868 524.868 0 0 0 29.961 10.819c3.603-5.735 7.306-13.197 11.184-20.986 2.714-5.453 5.534-11.058 8.71-16.432-.77-.273-1.62-.586-2.43-.879zm-191.808 23.371l-27.67 10.352 7.904 31.771 36.424-11.707c-1.418-2.814-2.81-5.649-4.207-8.457-4.048-8.131-8.169-15.961-12.451-21.959zm244.296 0c-4.282 5.998-8.403 13.828-12.45 21.959-1.399 2.808-2.79 5.643-4.208 8.457l36.424 11.707 7.904-31.771-27.67-10.352zM78.271 435.438a9.632 9.632 0 0 0-1.32.12 6.824 6.824 0 0 0-1.217.313c-11.544 4.201-25.105 18.04-21.648 29.828 3.07 10.472 19.675 13.359 30.492 11.916 3.828-.51 8.415-3.761 12.234-7.086l-8.124-32.648c-3.238-1.285-7.214-2.528-10.417-2.443zm355.458 0c-3.203-.085-7.179 1.158-10.416 2.443l-8.125 32.648c3.819 3.325 8.406 6.576 12.234 7.086 10.817 1.443 27.422-1.444 30.492-11.916 3.457-11.788-10.104-25.627-21.648-29.828a6.824 6.824 0 0 0-1.217-.312 9.632 9.632 0 0 0-1.32-.122z" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Pirate
+                        </div>
+                        <div class="legend-item">
+                            <svg class="legend-icon native" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M24 4 L4 44 L12 44 L12 32 L36 32 L36 44 L44 44 Z M18 18 L30 18 L30 26 L18 26 Z" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Native
+                        </div>
+                        <div class="legend-item">
+                            <svg class="legend-icon jesuit" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M24 4 L24 10 M20 7 L28 7 M20 38 L28 38 L28 28 L20 28 Z M16 18 L24 12 L32 18 L32 42 L16 42 Z" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Jesuit
+                        </div>
+                        <div class="legend-item">
+                            <svg class="legend-icon infected" viewBox="0 -8 72 72" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M50.14,29.62a9,9,0,0,0-2.79.58c0,.24,0,.48,0,.73a11.21,11.21,0,0,1-5.76,9.78,9.15,9.15,0,0,0,.61,1.83A9.44,9.44,0,0,0,43.07,44,14.77,14.77,0,0,0,51,30.93c0-.44,0-.87-.06-1.3l-.35,0Z M30.76,40.71A11.2,11.2,0,0,1,25,30.93c0-.25,0-.49,0-.73a9,9,0,0,0-2.79-.58h-.41l-.34,0c0,.43-.07.86-.07,1.3A14.77,14.77,0,0,0,29.31,44a10,10,0,0,0,.84-1.45A9.83,9.83,0,0,0,30.76,40.71Z M30.19,21.49a11.11,11.11,0,0,1,12,0,9.08,9.08,0,0,0,1.86-2.22c.12-.2.22-.42.32-.63a14.73,14.73,0,0,0-16.36,0c.1.22.2.43.31.63A9.12,9.12,0,0,0,30.19,21.49Z M32.71,30.93a3.46,3.46,0,0,1,2.48-3.31V25.7H35a11.09,11.09,0,0,1-6.35-3,11.19,11.19,0,0,1-2-2.45c-.07-.12-.13-.26-.2-.39A11.06,11.06,0,0,1,32.48,4.15V2.08a16.69,16.69,0,0,0-13,16.26,16.4,16.4,0,0,0,.25,2.73,16.36,16.36,0,0,0-3,1.36A16.69,16.69,0,0,0,9.12,41.81l1.79-1A11.06,11.06,0,0,1,21.8,27.65c.17,0,.35,0,.52,0a11.24,11.24,0,0,1,8.85,5.07l.11.16,1.6-.93A3.39,3.39,0,0,1,32.71,30.93Z M55.67,22.43a16.71,16.71,0,0,0-3-1.37,16.19,16.19,0,0,0,.24-2.72,16.7,16.7,0,0,0-13-16.27V4.15a11.12,11.12,0,0,1,7.42,10.48A10.93,10.93,0,0,1,46,19.88c-.07.13-.12.27-.2.4a11.09,11.09,0,0,1-2,2.44,11,11,0,0,1-6.36,3l-.24,0v1.91a3.47,3.47,0,0,1,2.48,3.32,3.32,3.32,0,0,1-.16,1l1.6.93.1-.16a11.24,11.24,0,0,1,8.85-5.07c.18,0,.36,0,.53,0A11,11,0,0,1,61.46,40.77l1.8,1A16.7,16.7,0,0,0,55.67,22.43Z M38.39,33.59a3.37,3.37,0,0,1-4.41,0l-1.81,1a11.07,11.07,0,0,1,.43,6.88A11.25,11.25,0,0,1,32,43.37a11.75,11.75,0,0,1-.79,1.43,11.09,11.09,0,0,1-16.55,2.39l-1.79,1A16.68,16.68,0,0,0,33.4,51.34a16.3,16.3,0,0,0,2.79-2,16.65,16.65,0,0,0,23.35-1.09l-1.79-1A11.11,11.11,0,0,1,45,48.38a11,11,0,0,1-3.76-3.58,10.54,10.54,0,0,1-.79-1.43,11.25,11.25,0,0,1-.64-1.85,11,11,0,0,1,.43-6.88Z" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Infected
+                        </div>
+                        <div class="legend-item">
+                            <svg class="legend-icon independent" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 6 L8 42 M8 10 L28 10 L28 26 L8 26 M12 14 L24 14 L24 22 L12 22 Z" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Independent
+                        </div>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3>Terrain Colors</h3>
+                    <div class="help-legend">
+                        <div class="legend-item"><span class="legend-color terrain-land"></span> Land</div>
+                        <div class="legend-item"><span class="legend-color terrain-water"></span> Water</div>
+                        <div class="legend-item"><span class="legend-color terrain-both"></span> Coastal</div>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3>About</h3>
+                    <p><a href="https://piratesirc.com/" target="_blank" rel="noopener noreferrer" class="piratesirc-link">Visit PiratesIRC</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-toolbar">
+            <!-- Collapse/Expand Buttons -->
+            <button class="toolbar-collapse-btn" id="toolbar-collapse-btn" title="Collapse toolbar">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 12l-4-4h8l-4 4z"/>
+                    <path d="M8 4l-4 4h8l-4-4z"/>
+                </svg>
+            </button>
+            <button class="toolbar-expand-btn" id="toolbar-expand-btn" title="Expand toolbar">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 4l4 4H4l4-4z"/>
+                    <path d="M8 12l4-4H4l4 4z"/>
+                </svg>
+            </button>
+
+            <!-- Reset Button -->
+            <div class="toolbar-section">
+                <button class="reset-btn" id="reset-view-btn" title="Reset View (Home)">⌂</button>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="toolbar-section">
+                <div class="toolbar-label">⊕ Nav</div>
+                <div class="pan-controls">
+                    <div class="pan-row">
+                        <button class="pan-btn" id="pan-up-btn" title="Pan Up (↑)">&#8593;</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" id="pan-left-btn" title="Pan Left (←)">&#8592;</button>
+                        <button class="pan-btn" id="pan-down-btn" title="Pan Down (↓)">&#8595;</button>
+                        <button class="pan-btn" id="pan-right-btn" title="Pan Right (→)">&#8594;</button>
+                    </div>
                 </div>
             </div>
 
+            <!-- Current Location Display -->
             <div class="toolbar-section">
-                <div class="toolbar-label">Zoom</div>
-                <div class="zoom-controls">
-                    <div class="zoom-level-display" id="zoom-level-display">1.0x</div>
-                    <button class="zoom-btn" id="zoom-in-btn" title="Zoom In (+)">+</button>
-                    <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out (-)">-</button>
+                <div class="toolbar-label">📍 Location</div>
+                <div class="current-location" id="current-location" title="Current viewport center">
+                    <div class="location-grid" id="location-grid">A1</div>
+                    <div class="location-coords" id="location-coords">20.0°N, 80.0°W</div>
                 </div>
             </div>
 
+            <!-- Loading Indicator -->
             <div class="toolbar-section">
-                <div class="toolbar-label">Display</div>
+                <div class="loading-indicator" id="loading-indicator" style="display: none;" title="Updating data...">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+
+            <!-- Display Toggles -->
+            <div class="toolbar-section">
+                <div class="toolbar-label">👁️ Display</div>
                 <div class="toggle-controls">
-                    <label class="toggle-item">
+                    <label class="toggle-item" title="Show/hide ports">
                         <input type="checkbox" id="toggle-ports" checked>
                         <span>Ports</span>
                     </label>
-                    <label class="toggle-item">
+                    <label class="toggle-item" title="Show/hide entities">
                         <input type="checkbox" id="toggle-entities" checked>
                         <span>Entities</span>
                     </label>
-                    <label class="toggle-item">
+                    <label class="toggle-item" title="Show/hide grid">
                         <input type="checkbox" id="toggle-gridlines" checked>
                         <span>Grid</span>
                     </label>
-                    <label class="toggle-item">
+                    <label class="toggle-item" title="Show/hide terrain overlay">
                         <input type="checkbox" id="toggle-terrain">
                         <span>Terrain</span>
                     </label>

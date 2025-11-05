@@ -9,15 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get all UI elements
     const mapViewport = document.getElementById('map-viewport');
     const mapContainer = document.getElementById('map-container');
-    const zoomInBtn = document.getElementById('zoom-in-btn');
-    const zoomOutBtn = document.getElementById('zoom-out-btn');
     const panUpBtn = document.getElementById('pan-up-btn');
     const panDownBtn = document.getElementById('pan-down-btn');
     const panLeftBtn = document.getElementById('pan-left-btn');
     const panRightBtn = document.getElementById('pan-right-btn');
     const mapTooltip = document.getElementById('map-tooltip');
     const coordinateTooltip = document.getElementById('coordinate-tooltip');
-    const zoomLevelDisplay = document.getElementById('zoom-level-display');
 
     // NEW: Sidebar and Tab elements
     const portList = document.getElementById('port-list');
@@ -30,6 +27,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleEntities = document.getElementById('toggle-entities');
     const toggleGridlines = document.getElementById('toggle-gridlines');
     const toggleTerrain = document.getElementById('toggle-terrain');
+
+    // New UI elements
+    const searchBox = document.getElementById('search-box');
+    const clearSearchBtn = document.getElementById('clear-search');
+    const resetViewBtn = document.getElementById('reset-view-btn');
+    const helpButton = document.getElementById('help-button');
+    const helpModal = document.getElementById('help-modal');
+    const helpModalClose = document.getElementById('help-modal-close');
+    const zoomSlider = document.getElementById('zoom-slider');
+    const miniMap = document.getElementById('mini-map');
+    const miniMapCanvas = document.getElementById('mini-map-canvas');
+    const miniMapViewport = document.getElementById('mini-map-viewport');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const locationGrid = document.getElementById('location-grid');
+    const locationCoords = document.getElementById('location-coords');
+    const toolbarCollapseBtn = document.getElementById('toolbar-collapse-btn');
+    const toolbarExpandBtn = document.getElementById('toolbar-expand-btn');
+    const mapToolbar = document.querySelector('.map-toolbar');
+    const zoomSliderPlus = document.getElementById('zoom-slider-plus');
+    const zoomSliderMinus = document.getElementById('zoom-slider-minus');
+    const versionBadge = document.getElementById('version-badge');
+    const jollyRoger = document.getElementById('jolly-roger');
+    const cannonball = document.getElementById('cannonball');
+    const krakenTentacle = document.getElementById('kraken-tentacle');
 
     // --- Constants ---
     const MAP_WIDTH = 3840;
@@ -57,9 +78,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let panY = 0;
     let isDragging = false;
     let startX, startY;
-    
+
+    // Initial view for reset
+    const INITIAL_SCALE = 0.29;
+    let initialPanX = 0;
+    let initialPanY = 0;
+
     // Terrain data
     let terrainData = {};
+
+    // Double-click handling
+    let lastClickTime = 0;
+    const DOUBLE_CLICK_DELAY = 300;
+
+    // --- Helper: Calculate version number from Julian date ---
+    function getVersionNumber() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayOfYear = Math.floor(diff / oneDay);
+        const year = String(now.getFullYear()).slice(-2);
+        return `${year}.${dayOfYear}`;
+    }
 
     // --- Helper: Convert map coordinates to grid reference ---
     function getGridReference(mapX, mapY) {
@@ -173,8 +214,27 @@ document.addEventListener('DOMContentLoaded', () => {
             latlonDiv.className = 'tooltip-latlon';
             latlonDiv.textContent = `${gridRef.latitude}°N, ${gridRef.longitude}°W`;
 
+            // Add copy button
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-coords-btn';
+            copyBtn.textContent = '📋';
+            copyBtn.title = 'Copy coordinates';
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const coordText = `${gridRef.full} (${gridRef.latitude}°N, ${gridRef.longitude}°W)`;
+                navigator.clipboard.writeText(coordText).then(() => {
+                    copyBtn.classList.add('copied');
+                    copyBtn.textContent = '✓';
+                    setTimeout(() => {
+                        copyBtn.classList.remove('copied');
+                        copyBtn.textContent = '📋';
+                    }, 2000);
+                });
+            });
+
             coordDiv.appendChild(gridDiv);
             coordDiv.appendChild(latlonDiv);
+            coordDiv.appendChild(copyBtn);
             mapTooltip.appendChild(coordDiv);
         }
 
@@ -267,13 +327,18 @@ document.addEventListener('DOMContentLoaded', () => {
             image: data.image || null  // Add image if present (for entities)
         };
 
+        let hideTimeout;
+
         listItem.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
             mapElement.classList.add('highlighted');
             showMapTooltip(tooltipData, mapElement);
         });
         listItem.addEventListener('mouseleave', () => {
-            mapElement.classList.remove('highlighted');
-            hideMapTooltip();
+            hideTimeout = setTimeout(() => {
+                mapElement.classList.remove('highlighted');
+                hideMapTooltip();
+            }, 200);
         });
 
         listItem.addEventListener('click', () => {
@@ -281,16 +346,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         mapElement.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
             mapElement.classList.add('highlighted');
             showMapTooltip(tooltipData, mapElement);
         });
         mapElement.addEventListener('mouseleave', () => {
-            mapElement.classList.remove('highlighted');
-            hideMapTooltip();
+            hideTimeout = setTimeout(() => {
+                mapElement.classList.remove('highlighted');
+                hideMapTooltip();
+            }, 200);
         });
 
         mapElement.addEventListener('click', () => {
             focusOnPoint(data.x, data.y);
+        });
+
+        // Keep tooltip visible when hovering over it
+        mapTooltip.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+        });
+
+        mapTooltip.addEventListener('mouseleave', () => {
+            mapElement.classList.remove('highlighted');
+            hideMapTooltip();
         });
     }
 
@@ -389,6 +467,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             addInteractivity(listItem, point, loc);
         });
+
+        // Update mini-map after ports are loaded
+        setTimeout(() => drawMiniMap(), 100);
     }
 
     function loadEntityData(entities) {
@@ -640,10 +721,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update sub-grid visibility
         updateSubGridVisibility();
 
-        // Update zoom level display
-        zoomLevelDisplay.textContent = `${scale.toFixed(1)}x`;
-
         mapContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+
+        // Update zoom slider
+        zoomSlider.value = scale;
+
+        // Update mini-map and current location
+        updateMiniMapViewport();
+        updateCurrentLocation();
     }
 
     function zoom(delta, clientX, clientY) {
@@ -684,6 +769,124 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTransform();
     }
 
+    function resetView() {
+        mapContainer.classList.add('is-transitioning');
+        scale = INITIAL_SCALE;
+        panX = initialPanX;
+        panY = initialPanY;
+        updateTransform();
+    }
+
+    // --- Current Location Display ---
+    function updateCurrentLocation() {
+        const viewportWidth = getViewportWidth();
+        const viewportHeight = getViewportHeight();
+
+        // Calculate center of viewport in map coordinates
+        const centerX = (viewportWidth / 2 - panX) / scale;
+        const centerY = (viewportHeight / 2 - panY) / scale;
+
+        const gridRef = getGridReference(centerX, centerY);
+        if (gridRef) {
+            locationGrid.textContent = gridRef.major;
+            locationCoords.textContent = `${gridRef.latitude}°N, ${gridRef.longitude}°W`;
+        }
+    }
+
+    // --- Mini-map Functions ---
+    function drawMiniMap() {
+        const ctx = miniMapCanvas.getContext('2d');
+        const canvas = miniMapCanvas;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw simplified map (just a dark background with grid outline)
+        ctx.fillStyle = '#0c0a09';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw grid outline
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+        ctx.lineWidth = 1;
+        const scaleX = canvas.width / MAP_WIDTH;
+        const scaleY = canvas.height / MAP_HEIGHT;
+        ctx.strokeRect(
+            GRID_START_X * scaleX,
+            GRID_START_Y * scaleY,
+            (GRID_COLS * CELL_WIDTH) * scaleX,
+            (GRID_ROWS * CELL_HEIGHT) * scaleY
+        );
+
+        // Draw ports as tiny dots if toggle is on
+        if (togglePorts.checked) {
+            document.querySelectorAll('.map-point').forEach(point => {
+                const x = parseFloat(point.style.left);
+                const y = parseFloat(point.style.top);
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Draw entities as tiny dots if toggle is on
+        if (toggleEntities.checked) {
+            document.querySelectorAll('.map-entity').forEach(entity => {
+                const x = parseFloat(entity.style.left);
+                const y = parseFloat(entity.style.top);
+                ctx.fillStyle = '#0ff';
+                ctx.beginPath();
+                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        updateMiniMapViewport();
+    }
+
+    function updateMiniMapViewport() {
+        const scaleX = 150 / MAP_WIDTH;
+        const scaleY = 98 / MAP_HEIGHT;
+
+        // Calculate what part of the map is visible
+        const viewportWidth = getViewportWidth();
+        const viewportHeight = getViewportHeight();
+
+        const visibleLeft = -panX / scale;
+        const visibleTop = -panY / scale;
+        const visibleWidth = viewportWidth / scale;
+        const visibleHeight = viewportHeight / scale;
+
+        // Update viewport rectangle
+        miniMapViewport.style.left = (visibleLeft * scaleX) + 'px';
+        miniMapViewport.style.top = (visibleTop * scaleY) + 'px';
+        miniMapViewport.style.width = (visibleWidth * scaleX) + 'px';
+        miniMapViewport.style.height = (visibleHeight * scaleY) + 'px';
+    }
+
+    // --- Search/Filter Functions ---
+    function filterItems() {
+        const searchTerm = searchBox.value.toLowerCase().trim();
+        clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
+
+        const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+        const items = document.querySelectorAll(`#${activeTab}-content .port-item`);
+
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function clearSearch() {
+        searchBox.value = '';
+        filterItems();
+    }
+
     // --- 5. Initial Setup ---
 
     panX = (getViewportWidth() - (MAP_WIDTH * scale)) / 2;
@@ -695,10 +898,23 @@ document.addEventListener('DOMContentLoaded', () => {
         panY = 0;
     }
 
+    // Save initial view
+    initialPanX = panX;
+    initialPanY = panY;
+
     createGridLines();
     loadAllData();
 
-    setInterval(loadAllData, 60000);
+    // Set version number
+    versionBadge.textContent = `v${getVersionNumber()}`;
+
+    setInterval(() => {
+        loadingIndicator.style.display = 'flex';
+        loadAllData();
+        setTimeout(() => {
+            loadingIndicator.style.display = 'none';
+        }, 1000);
+    }, 60000);
 
     // --- 6. Event Listeners ---
 
@@ -713,6 +929,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // NEW: Click handler for coordinate display
     mapViewport.addEventListener('click', (e) => {
+        const currentTime = Date.now();
+        const isDoubleClick = (currentTime - lastClickTime) < DOUBLE_CLICK_DELAY;
+        lastClickTime = currentTime;
+
+        // Handle double-click - zoom in at click point
+        if (isDoubleClick) {
+            hideMapTooltip();
+            coordinateTooltip.style.visibility = 'hidden';
+
+            const containerRect = mapContainer.getBoundingClientRect();
+            const clickX = e.clientX - containerRect.left;
+            const clickY = e.clientY - containerRect.top;
+            const mapX = clickX / scale;
+            const mapY = clickY / scale;
+
+            mapContainer.classList.add('is-transitioning');
+            const newScale = Math.min(MAX_SCALE, scale * 1.5);
+            const clientX_relative = e.clientX - SIDEBAR_WIDTH;
+            panX = clientX_relative - (mapX * newScale);
+            panY = e.clientY - (mapY * newScale);
+            scale = newScale;
+            updateTransform();
+            return;
+        }
+
         // Ignore clicks on interactive elements
         if (e.target.closest('.map-point') ||
             e.target.closest('.map-entity') ||
@@ -729,7 +970,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const containerRect = mapContainer.getBoundingClientRect();
         const clickX = e.clientX - containerRect.left;
         const clickY = e.clientY - containerRect.top;
-        
+
         const mapX = clickX / scale;
         const mapY = clickY / scale;
 
@@ -785,16 +1026,36 @@ document.addEventListener('DOMContentLoaded', () => {
         zoom(delta, e.clientX, e.clientY);
     }, { passive: false });
 
-    zoomInBtn.addEventListener('click', () => zoomCenter(1));
-    zoomOutBtn.addEventListener('click', () => zoomCenter(-1));
-
-    panUpBtn.addEventListener('click', () => panMap(0, PAN_AMOUNT));
-    panDownBtn.addEventListener('click', () => panMap(0, -PAN_AMOUNT));
-    panLeftBtn.addEventListener('click', () => panMap(PAN_AMOUNT, 0));
-    panRightBtn.addEventListener('click', () => panMap(-PAN_AMOUNT, 0));
+    panUpBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panMap(0, PAN_AMOUNT);
+    });
+    panDownBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panMap(0, -PAN_AMOUNT);
+    });
+    panLeftBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panMap(PAN_AMOUNT, 0);
+    });
+    panRightBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panMap(-PAN_AMOUNT, 0);
+    });
 
     window.addEventListener('keydown', (e) => {
-        if (e.key === '+' || e.key === '=') {
+        if (e.key === 'Escape') {
+            hideMapTooltip();
+            coordinateTooltip.style.visibility = 'hidden';
+            if (helpModal.style.display === 'flex') {
+                helpModal.style.display = 'none';
+                versionBadge.style.display = 'none';
+            }
+        } else if (e.key === '+' || e.key === '=') {
             e.preventDefault();
             zoomCenter(1);
         } else if (e.key === '-' || e.key === '_') {
@@ -813,6 +1074,273 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             panMap(-PAN_AMOUNT, 0);
         }
+    });
+
+    // Search box events
+    searchBox.addEventListener('input', filterItems);
+    clearSearchBtn.addEventListener('click', clearSearch);
+
+    // Reset view button
+    resetViewBtn.addEventListener('click', resetView);
+
+    // Help modal events
+    helpButton.addEventListener('click', () => {
+        helpModal.style.display = 'flex';
+        versionBadge.style.display = 'block';
+    });
+
+    helpModalClose.addEventListener('click', () => {
+        helpModal.style.display = 'none';
+        versionBadge.style.display = 'none';
+    });
+
+    helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) {
+            helpModal.style.display = 'none';
+            versionBadge.style.display = 'none';
+        }
+    });
+
+    // Allow mouse wheel scrolling in help modal content
+    const helpModalContent = document.querySelector('.help-modal-content');
+    helpModalContent.addEventListener('wheel', (e) => {
+        // Stop propagation to prevent map zoom when scrolling help content
+        e.stopPropagation();
+    }, { passive: true });
+
+    // Easter egg: Version badge click
+    versionBadge.addEventListener('click', () => {
+        // Close help dialog
+        helpModal.style.display = 'none';
+        versionBadge.style.display = 'none';
+
+        const effects = [
+            // Effect 1: Spin the map
+            () => {
+                mapContainer.style.transition = 'transform 2s ease-in-out';
+                const currentTransform = mapContainer.style.transform;
+                mapContainer.style.transform = currentTransform + ' rotate(360deg)';
+                setTimeout(() => {
+                    mapContainer.style.transition = '';
+                    updateTransform();
+                }, 2000);
+            },
+            // Effect 2: Rainbow colors on all icons
+            () => {
+                const points = document.querySelectorAll('.map-point');
+                const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#8b00ff'];
+                let colorIndex = 0;
+                const interval = setInterval(() => {
+                    points.forEach(point => {
+                        const icon = point.querySelector('.map-icon');
+                        if (icon) {
+                            icon.style.stroke = colors[colorIndex % colors.length];
+                            icon.style.fill = colors[colorIndex % colors.length];
+                        }
+                    });
+                    colorIndex++;
+                }, 200);
+                setTimeout(() => {
+                    clearInterval(interval);
+                    loadAllData(); // Reload to restore original colors
+                }, 3000);
+            },
+            // Effect 3: Shake animation
+            () => {
+                mapContainer.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    mapContainer.style.animation = '';
+                }, 500);
+            },
+            // Effect 4: Random teleport
+            () => {
+                const randomX = Math.random() * MAP_WIDTH;
+                const randomY = Math.random() * MAP_HEIGHT;
+                focusOnPoint(randomX, randomY);
+            },
+            // Effect 5: Disco zoom
+            () => {
+                let count = 0;
+                const interval = setInterval(() => {
+                    scale = MIN_SCALE + Math.random() * (MAX_SCALE - MIN_SCALE);
+                    updateTransform();
+                    count++;
+                    if (count >= 10) {
+                        clearInterval(interval);
+                        resetView();
+                    }
+                }, 200);
+            },
+            // Effect 6: All entities dance
+            () => {
+                const entities = document.querySelectorAll('.map-entity');
+                entities.forEach(entity => {
+                    entity.style.animation = 'bounce 0.5s infinite';
+                });
+                setTimeout(() => {
+                    entities.forEach(entity => {
+                        entity.style.animation = '';
+                    });
+                }, 3000);
+            },
+            // Effect 7: Redirect to YouTube video
+            () => {
+                window.open('https://youtu.be/xMeLqP1A5O4', '_blank');
+            },
+            // Effect 8: Jolly Roger flag
+            () => {
+                jollyRoger.style.display = 'block';
+                jollyRoger.style.animation = 'fade-in-out 4s ease-in-out, wave-flag 0.5s ease-in-out infinite';
+                setTimeout(() => {
+                    jollyRoger.style.display = 'none';
+                    jollyRoger.style.animation = '';
+                }, 4000);
+            },
+            // Effect 9: Cannonball attack
+            () => {
+                cannonball.style.display = 'block';
+                cannonball.style.animation = 'cannonball-flight 1.5s linear';
+                setTimeout(() => {
+                    // Screen shake on impact
+                    document.body.style.animation = 'shake 0.3s';
+                    setTimeout(() => {
+                        document.body.style.animation = '';
+                        cannonball.style.display = 'none';
+                        cannonball.style.animation = '';
+                    }, 300);
+                }, 1500);
+            },
+            // Effect 10: The Kraken
+            () => {
+                krakenTentacle.style.display = 'block';
+                krakenTentacle.style.animation = 'tentacle-wave 3s ease-in-out';
+                setTimeout(() => {
+                    krakenTentacle.style.display = 'none';
+                    krakenTentacle.style.animation = '';
+                }, 3000);
+            },
+            // Effect 11: Cannon fire sound
+            () => {
+                const audio = new Audio('https://piratesirc.com/sounds/cannon-fired1.mp3');
+                audio.play().catch(err => console.log('Audio play failed:', err));
+            },
+            // Effect 12: Pirate cheer
+            () => {
+                const audio = new Audio('https://piratesirc.com/sounds/cheer1.mp3');
+                audio.play().catch(err => console.log('Audio play failed:', err));
+            },
+            // Effect 13: Background music
+            () => {
+                const audio = new Audio('https://piratesirc.com/sounds/Drunken_Sailor.mid');
+                audio.loop = true;
+                audio.volume = 0.3;
+                audio.play().catch(err => console.log('Audio play failed:', err));
+                // Stop after 30 seconds
+                setTimeout(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }, 30000);
+            }
+        ];
+
+        // Pick a random effect
+        const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+        randomEffect();
+
+        // Visual feedback on badge
+        versionBadge.style.animation = 'pulse 0.5s';
+        setTimeout(() => {
+            versionBadge.style.animation = '';
+        }, 500);
+    });
+
+    // Zoom slider
+    zoomSlider.addEventListener('input', (e) => {
+        mapContainer.classList.remove('is-transitioning');
+        const newScale = parseFloat(e.target.value);
+        const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
+        const clientY = getViewportHeight() / 2;
+
+        const clientX_relative = clientX - SIDEBAR_WIDTH;
+        const centerMapX = (clientX_relative - panX) / scale;
+        const centerMapY = (clientY - panY) / scale;
+
+        panX = clientX_relative - (centerMapX * newScale);
+        panY = clientY - (centerMapY * newScale);
+        scale = newScale;
+
+        updateTransform();
+    });
+
+    // Mini-map click to jump
+    miniMap.addEventListener('click', (e) => {
+        const rect = miniMap.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        const scaleX = MAP_WIDTH / 150;
+        const scaleY = MAP_HEIGHT / 98;
+
+        const mapX = clickX * scaleX;
+        const mapY = clickY * scaleY;
+
+        focusOnPoint(mapX, mapY);
+    });
+
+    // Toolbar collapse/expand
+    toolbarCollapseBtn.addEventListener('click', () => {
+        mapToolbar.classList.add('collapsed');
+    });
+
+    toolbarExpandBtn.addEventListener('click', () => {
+        mapToolbar.classList.remove('collapsed');
+    });
+
+    // Zoom slider +/- buttons
+    zoomSliderPlus.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const newScale = Math.min(MAX_SCALE, scale + ZOOM_SPEED * scale);
+        const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
+        const clientY = getViewportHeight() / 2;
+
+        const clientX_relative = clientX - SIDEBAR_WIDTH;
+        const centerMapX = (clientX_relative - panX) / scale;
+        const centerMapY = (clientY - panY) / scale;
+
+        panX = clientX_relative - (centerMapX * newScale);
+        panY = clientY - (centerMapY * newScale);
+        scale = newScale;
+
+        updateTransform();
+    });
+
+    zoomSliderPlus.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    zoomSliderMinus.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const newScale = Math.max(MIN_SCALE, scale - ZOOM_SPEED * scale);
+        const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
+        const clientY = getViewportHeight() / 2;
+
+        const clientX_relative = clientX - SIDEBAR_WIDTH;
+        const centerMapX = (clientX_relative - panX) / scale;
+        const centerMapY = (clientY - panY) / scale;
+
+        panX = clientX_relative - (centerMapX * newScale);
+        panY = clientY - (centerMapY * newScale);
+        scale = newScale;
+
+        updateTransform();
+    });
+
+    zoomSliderMinus.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
     });
 
     window.addEventListener('resize', () => {
@@ -866,6 +1394,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ports.forEach(port => {
             port.style.display = togglePorts.checked ? 'block' : 'none';
         });
+        drawMiniMap();
     });
 
     toggleEntities.addEventListener('change', () => {
@@ -873,6 +1402,7 @@ document.addEventListener('DOMContentLoaded', () => {
         entities.forEach(entity => {
             entity.style.display = toggleEntities.checked ? 'block' : 'none';
         });
+        drawMiniMap();
     });
 
     toggleGridlines.addEventListener('change', () => {
