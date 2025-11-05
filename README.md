@@ -143,7 +143,7 @@ python tool/scan-map.py
 
 ## Grid Coordinate System
 
-### Map Coverage
+### PiratesIRC Game Map Coverage
 - **Latitude**: 30°N (top) to 14°N (bottom)
 - **Longitude**: 98°W (left) to 62°W (right)
 
