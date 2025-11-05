@@ -305,10 +305,19 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         const terrainIcon = terrainIcons[gridRef.terrain] || '❓';
 
+        // Display name mapping (change "both" to "Coastal")
+        const terrainDisplayNames = {
+            'both': 'Coastal',
+            'land': 'land',
+            'water': 'water',
+            'unknown': 'unknown'
+        };
+        const terrainDisplay = terrainDisplayNames[gridRef.terrain] || gridRef.terrain;
+
         coordinateTooltip.innerHTML = `
             <div class="coord-main">${gridRef.full}</div>
             <div class="coord-latlon">${gridRef.latitude}°N, ${gridRef.longitude}°W</div>
-            <div class="coord-terrain">${terrainIcon} ${gridRef.terrain}</div>
+            <div class="coord-terrain">${terrainIcon} ${terrainDisplay}</div>
         `;
         coordinateTooltip.style.left = mapX + 'px';
         coordinateTooltip.style.top = mapY + 'px';
@@ -1545,4 +1554,20 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
             document.querySelectorAll('.terrain-cell').forEach(cell => cell.remove());
         }
     });
+
+    // Prevent click-through to map from toolbar controls
+    const toggleControls = document.querySelector('.toggle-controls');
+    if (toggleControls) {
+        toggleControls.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
+
+    // Prevent click-through to map from zoom slider
+    const zoomSliderContainer = document.querySelector('.zoom-slider-container');
+    if (zoomSliderContainer) {
+        zoomSliderContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
 });
