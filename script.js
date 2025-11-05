@@ -45,6 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingIndicator = document.getElementById('loading-indicator');
     const locationGrid = document.getElementById('location-grid');
     const locationCoords = document.getElementById('location-coords');
+    const toolbarCollapseBtn = document.getElementById('toolbar-collapse-btn');
+    const toolbarExpandBtn = document.getElementById('toolbar-expand-btn');
+    const mapToolbar = document.querySelector('.map-toolbar');
 
     // --- Constants ---
     const MAP_WIDTH = 3840;
@@ -310,13 +313,18 @@ document.addEventListener('DOMContentLoaded', () => {
             image: data.image || null  // Add image if present (for entities)
         };
 
+        let hideTimeout;
+
         listItem.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
             mapElement.classList.add('highlighted');
             showMapTooltip(tooltipData, mapElement);
         });
         listItem.addEventListener('mouseleave', () => {
-            mapElement.classList.remove('highlighted');
-            hideMapTooltip();
+            hideTimeout = setTimeout(() => {
+                mapElement.classList.remove('highlighted');
+                hideMapTooltip();
+            }, 200);
         });
 
         listItem.addEventListener('click', () => {
@@ -324,16 +332,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         mapElement.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
             mapElement.classList.add('highlighted');
             showMapTooltip(tooltipData, mapElement);
         });
         mapElement.addEventListener('mouseleave', () => {
-            mapElement.classList.remove('highlighted');
-            hideMapTooltip();
+            hideTimeout = setTimeout(() => {
+                mapElement.classList.remove('highlighted');
+                hideMapTooltip();
+            }, 200);
         });
 
         mapElement.addEventListener('click', () => {
             focusOnPoint(data.x, data.y);
+        });
+
+        // Keep tooltip visible when hovering over it
+        mapTooltip.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+        });
+
+        mapTooltip.addEventListener('mouseleave', () => {
+            mapElement.classList.remove('highlighted');
+            hideMapTooltip();
         });
     }
 
@@ -1066,6 +1087,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const mapY = clickY * scaleY;
 
         focusOnPoint(mapX, mapY);
+    });
+
+    // Toolbar collapse/expand
+    toolbarCollapseBtn.addEventListener('click', () => {
+        mapToolbar.classList.add('collapsed');
+    });
+
+    toolbarExpandBtn.addEventListener('click', () => {
+        mapToolbar.classList.remove('collapsed');
     });
 
     window.addEventListener('resize', () => {

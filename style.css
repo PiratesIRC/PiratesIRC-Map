@@ -71,7 +71,7 @@ html, body {
 }
 
 #search-box {
-    width: 100%;
+    width: calc(100% - 20px); /* Account for padding */
     padding: 8px 30px 8px 10px;
     background-color: #2a2a2a;
     border: 1px solid #444;
@@ -79,6 +79,7 @@ html, body {
     color: #fff;
     font-family: 'IM Fell English', serif;
     font-size: 14px;
+    box-sizing: border-box;
 }
 
 #search-box:focus {
@@ -384,6 +385,47 @@ html, body {
     flex-direction: row;
     align-items: center;
     gap: 12px;
+    transition: all 0.3s ease;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 300px);
+}
+
+.map-toolbar.collapsed {
+    padding: 4px 12px;
+    gap: 0;
+}
+
+.map-toolbar.collapsed .toolbar-section,
+.map-toolbar.collapsed .toolbar-collapse-btn {
+    display: none;
+}
+
+.map-toolbar.collapsed .toolbar-expand-btn {
+    display: block;
+}
+
+.toolbar-collapse-btn,
+.toolbar-expand-btn {
+    background-color: rgba(255, 215, 0, 0.2);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    border-radius: 3px;
+    color: #ffd700;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    align-self: center;
+}
+
+.toolbar-collapse-btn:hover,
+.toolbar-expand-btn:hover {
+    background-color: rgba(255, 215, 0, 0.4);
+    border-color: #ffd700;
+    transform: scale(1.1);
+}
+
+.toolbar-expand-btn {
+    display: none;
 }
 
 .toolbar-section {
@@ -591,22 +633,22 @@ html, body {
     padding: 10px;
     box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
     z-index: 12;
-    
+
     /* transform is now set entirely by JS to include counter-scale */
-    
+
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.2s ease;
-    
-    pointer-events: none; 
-    
+
+    pointer-events: auto;
+
     /* *** UPDATED: Set tooltip font *** */
     font-family: 'Merriweather', serif;
     font-size: 15px; /* Merriweather is readable at a smaller size */
     line-height: 1.4;
-    
+
     /* UPDATED: Tooltip must have transform-origin for counter-scaling */
-    transform-origin: 0 0; 
+    transform-origin: 0 0;
 }
 
 .map-tooltip h4 {
