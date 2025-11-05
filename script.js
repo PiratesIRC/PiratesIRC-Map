@@ -875,20 +875,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!easterEggDialog) {
             easterEggDialog = document.createElement('div');
             easterEggDialog.id = 'easter-egg-dialog';
-            easterEggDialog.className = 'easter-egg-dialog';
+            easterEggDialog.className = 'easter-egg-dialog hidden';
             document.body.appendChild(easterEggDialog);
         }
 
         // Set message and show dialog
         easterEggDialog.textContent = message;
-        easterEggDialog.style.display = 'block';
-        easterEggDialog.style.opacity = '1';
+        easterEggDialog.classList.remove('hidden');
+        // Use setTimeout to trigger transition after display change
+        setTimeout(() => {
+            easterEggDialog.classList.add('visible');
+        }, 10);
 
         // Hide after duration
         setTimeout(() => {
-            easterEggDialog.style.opacity = '0';
+            easterEggDialog.classList.remove('visible');
             setTimeout(() => {
-                easterEggDialog.style.display = 'none';
+                easterEggDialog.classList.add('hidden');
             }, 300);
         }, duration);
     }
@@ -962,7 +965,11 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
     // --- Search/Filter Functions ---
     function filterItems() {
         const searchTerm = searchBox.value.toLowerCase().trim();
-        clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
+        if (searchTerm) {
+            clearSearchBtn.classList.remove('hidden');
+        } else {
+            clearSearchBtn.classList.add('hidden');
+        }
 
         const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
         const items = document.querySelectorAll(`#${activeTab}-content .port-item`);
@@ -1182,7 +1189,7 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
                 // Secret code found, clear the search box
                 setTimeout(() => {
                     searchBox.value = '';
-                    clearSearchBtn.style.display = 'none';
+                    clearSearchBtn.classList.add('hidden');
                     filterItems();
                 }, 100);
             }

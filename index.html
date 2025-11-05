@@ -8,6 +8,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>PiratesIRC Interactive Map</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English&display=swap" rel="stylesheet">
@@ -26,7 +27,7 @@
         <!-- Search Box -->
         <div class="search-container">
             <input type="text" id="search-box" placeholder="Search ports/entities..." autocomplete="off">
-            <button id="clear-search" class="clear-search-btn" style="display: none;">×</button>
+            <button id="clear-search" class="clear-search-btn hidden">×</button>
         </div>
 
         <p class="last-updated">Last Updated: 10/26/2025</p>
@@ -68,10 +69,10 @@
         <button class="help-button" id="help-button" title="Help & Shortcuts">?</button>
 
         <!-- Version Display (only visible when help is open) -->
-        <div class="version-badge" id="version-badge" style="display: none;"></div>
+        <div class="version-badge hidden" id="version-badge"></div>
 
         <!-- Easter Egg Elements -->
-        <div class="jolly-roger" id="jolly-roger" style="display: none;">
+        <div class="jolly-roger hidden" id="jolly-roger">
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                 <!-- Skull -->
                 <ellipse cx="100" cy="85" rx="45" ry="50" fill="#ffffff" stroke="#000" stroke-width="3"/>
@@ -93,9 +94,9 @@
             </svg>
         </div>
 
-        <div class="cannonball" id="cannonball" style="display: none;"></div>
+        <div class="cannonball hidden" id="cannonball"></div>
 
-        <div class="kraken-tentacle" id="kraken-tentacle" style="display: none;">
+        <div class="kraken-tentacle hidden" id="kraken-tentacle">
             <svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
                 <!-- Tentacle -->
                 <path d="M 50 200 Q 45 180 50 160 Q 55 140 45 120 Q 40 100 50 80 Q 60 60 50 40 Q 45 20 50 0"
@@ -114,7 +115,7 @@
         </div>
 
         <!-- Help Modal -->
-        <div class="help-modal" id="help-modal" style="display: none;">
+        <div class="help-modal hidden" id="help-modal">
             <div class="help-modal-content">
                 <button class="help-modal-close" id="help-modal-close">×</button>
                 <h2>Map Controls & Guide</h2>
@@ -266,7 +267,7 @@
 
             <!-- Loading Indicator -->
             <div class="toolbar-section">
-                <div class="loading-indicator" id="loading-indicator" style="display: none;" title="Updating data...">
+                <div class="loading-indicator hidden" id="loading-indicator" title="Updating data...">
                     <div class="loading-spinner"></div>
                 </div>
             </div>
