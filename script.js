@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const toolbarCollapseBtn = document.getElementById('toolbar-collapse-btn');
     const toolbarExpandBtn = document.getElementById('toolbar-expand-btn');
     const mapToolbar = document.querySelector('.map-toolbar');
+    const zoomSliderPlus = document.getElementById('zoom-slider-plus');
+    const zoomSliderMinus = document.getElementById('zoom-slider-minus');
 
     // --- Constants ---
     const MAP_WIDTH = 3840;
@@ -1096,6 +1098,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     toolbarExpandBtn.addEventListener('click', () => {
         mapToolbar.classList.remove('collapsed');
+    });
+
+    // Zoom slider +/- buttons
+    zoomSliderPlus.addEventListener('click', () => {
+        const newScale = Math.min(MAX_SCALE, scale + ZOOM_SPEED * scale);
+        const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
+        const clientY = getViewportHeight() / 2;
+
+        const clientX_relative = clientX - SIDEBAR_WIDTH;
+        const centerMapX = (clientX_relative - panX) / scale;
+        const centerMapY = (clientY - panY) / scale;
+
+        panX = clientX_relative - (centerMapX * newScale);
+        panY = clientY - (centerMapY * newScale);
+        scale = newScale;
+
+        updateTransform();
+    });
+
+    zoomSliderMinus.addEventListener('click', () => {
+        const newScale = Math.max(MIN_SCALE, scale - ZOOM_SPEED * scale);
+        const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
+        const clientY = getViewportHeight() / 2;
+
+        const clientX_relative = clientX - SIDEBAR_WIDTH;
+        const centerMapX = (clientX_relative - panX) / scale;
+        const centerMapY = (clientY - panY) / scale;
+
+        panX = clientX_relative - (centerMapX * newScale);
+        panY = clientY - (centerMapY * newScale);
+        scale = newScale;
+
+        updateTransform();
     });
 
     window.addEventListener('resize', () => {
