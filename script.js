@@ -177,6 +177,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get grid reference for this location
         const gridRef = getGridReference(mapX, mapY);
 
+        // Check if we're in column R (rightmost column, index 17)
+        const isColumnR = gridRef && gridRef.major.startsWith('R');
+
         // Clear existing content
         mapTooltip.innerHTML = '';
 
@@ -260,7 +263,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalXOffset = tooltipXOffset_map;
 
         const tooltipScreenWidth = tooltipWidth / scale;
-        if (pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
+        // Force tooltip to the left for column R, or if it would go off screen
+        if (isColumnR || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
             finalXOffset = -tooltipXOffset_map - tooltipWidth_map;
         }
 
@@ -953,16 +957,6 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         const searchTerm = searchBox.value.toLowerCase().trim();
         clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
 
-        // Check for secret codes first
-        if (searchTerm && checkSecretCode(searchTerm)) {
-            // Secret code found, clear the search box
-            setTimeout(() => {
-                searchBox.value = '';
-                clearSearchBtn.style.display = 'none';
-            }, 100);
-            return;
-        }
-
         const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
         const items = document.querySelectorAll(`#${activeTab}-content .port-item`);
 
@@ -1172,6 +1166,22 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
 
     // Search box events
     searchBox.addEventListener('input', filterItems);
+
+    // Check for secret codes on Enter key
+    searchBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const searchTerm = searchBox.value.toLowerCase().trim();
+            if (searchTerm && checkSecretCode(searchTerm)) {
+                // Secret code found, clear the search box
+                setTimeout(() => {
+                    searchBox.value = '';
+                    clearSearchBtn.style.display = 'none';
+                    filterItems();
+                }, 100);
+            }
+        }
+    });
+
     clearSearchBtn.addEventListener('click', clearSearch);
 
     // Reset view button

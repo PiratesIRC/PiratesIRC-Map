@@ -1255,6 +1255,7 @@ html, body {
     border-radius: 50%;
     z-index: 10000;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    display: none;
 }
 
 @keyframes cannonball-flight {
