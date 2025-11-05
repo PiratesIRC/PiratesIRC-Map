@@ -21,6 +21,17 @@ html, body {
     z-index: 20;
     display: flex;
     flex-direction: column;
+    transition: transform 0.3s ease;
+}
+
+/* Mobile: collapsible sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-250px);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
 }
 
 /* --- NEW: Tab Styles --- */
@@ -51,6 +62,50 @@ html, body {
     border-bottom-color: #ffd700;
 }
 /* --- End Tab Styles --- */
+
+/* Search Box */
+.search-container {
+    position: relative;
+    padding: 10px;
+    border-bottom: 1px solid #333;
+}
+
+#search-box {
+    width: 100%;
+    padding: 8px 30px 8px 10px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #fff;
+    font-family: 'IM Fell English', serif;
+    font-size: 14px;
+}
+
+#search-box:focus {
+    outline: none;
+    border-color: #ffd700;
+    background-color: #333;
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    line-height: 20px;
+}
+
+.clear-search-btn:hover {
+    color: #ffd700;
+}
 
 .last-updated {
     font-size: 0.85em;
@@ -182,6 +237,11 @@ html, body {
 .map-point:hover {
      /* transform is handled by JS */
 }
+
+.map-point:hover .map-icon {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)) drop-shadow(0 1px 3px rgba(0,0,0,0.7));
+}
+
 .map-point.highlighted {
     /* transform is handled by JS */
     z-index: 11;
@@ -204,7 +264,7 @@ html, body {
 }
 .map-entity img {
     /* UPDATED: Reverted to smaller base size */
-    width: 32px; 
+    width: 32px;
     height: 32px;
     filter: drop-shadow(0 1px 3px rgba(0,0,0,0.7));
     transition: all 0.2s ease;
@@ -212,6 +272,9 @@ html, body {
 .map-entity:hover {
     /* transform is handled by JS */
     z-index: 11;
+}
+.map-entity:hover img {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)) drop-shadow(0 1px 3px rgba(0,0,0,0.7));
 }
 .map-entity.highlighted {
     /* transform is handled by JS */
@@ -374,12 +437,15 @@ html, body {
 }
 
 .pan-btn:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.35);
     border-color: #ffd700;
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
 }
 
 .pan-btn:active {
     background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(0.95);
 }
 
 .zoom-controls {
@@ -404,12 +470,86 @@ html, body {
 }
 
 .zoom-btn:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.35);
     border-color: #ffd700;
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
 }
 
 .zoom-btn:active {
     background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(0.95);
+}
+
+/* Reset Button */
+.reset-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+    font-weight: bold;
+    background-color: rgba(255, 215, 0, 0.2);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    border-radius: 3px;
+    cursor: pointer;
+    color: #ffd700;
+    line-height: 34px;
+    transition: all 0.2s ease;
+    align-self: center;
+}
+
+.reset-btn:hover {
+    background-color: rgba(255, 215, 0, 0.4);
+    border-color: #ffd700;
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.reset-btn:active {
+    transform: scale(0.95);
+}
+
+/* Current Location Display */
+.current-location {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.location-grid {
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffd700;
+    font-family: 'Merriweather', serif;
+}
+
+.location-coords {
+    font-size: 9px;
+    color: #aaa;
+    font-family: 'Merriweather', serif;
+    white-space: nowrap;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 215, 0, 0.3);
+    border-top: 3px solid #ffd700;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Toggle Controls */
@@ -574,11 +714,271 @@ html, body {
     background-color: #D2B48C;
 }
 
+/* --- Zoom Slider --- */
+.zoom-slider-container {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba(26, 26, 26, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 10px 8px;
+    z-index: 19;
+    backdrop-filter: blur(10px);
+    gap: 8px;
+}
+
+.zoom-slider-label {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffd700;
+    user-select: none;
+}
+
+.zoom-slider {
+    -webkit-appearance: slider-vertical;
+    width: 8px;
+    height: 300px;
+    background: linear-gradient(to bottom, rgba(255, 215, 0, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+
+.zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #ffd700;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.zoom-slider::-webkit-slider-thumb:hover {
+    background: #fff;
+    border-color: #ffd700;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+}
+
+.zoom-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #ffd700;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.zoom-slider::-moz-range-thumb:hover {
+    background: #fff;
+    border-color: #ffd700;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+}
+
+/* --- Mini Map --- */
+.mini-map {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 150px;
+    height: 98px;
+    background-color: rgba(26, 26, 26, 0.8);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    border-radius: 6px;
+    overflow: hidden;
+    z-index: 18;
+    cursor: pointer;
+}
+
+#mini-map-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.mini-map-viewport {
+    position: absolute;
+    border: 2px solid #ffd700;
+    background-color: rgba(255, 215, 0, 0.2);
+    pointer-events: none;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+/* --- Help Button --- */
+.help-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 215, 0, 0.3);
+    border: 2px solid rgba(255, 215, 0, 0.6);
+    color: #ffd700;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 22;
+    transition: all 0.2s ease;
+    font-family: serif;
+    line-height: 36px;
+}
+
+.help-button:hover {
+    background-color: rgba(255, 215, 0, 0.5);
+    border-color: #ffd700;
+    transform: scale(1.1);
+    box-shadow: 0 0 16px rgba(255, 215, 0, 0.8);
+}
+
+.help-button:active {
+    transform: scale(0.95);
+}
+
+/* --- Help Modal --- */
+.help-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.help-modal-content {
+    background-color: #1a1a1a;
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    padding: 30px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.help-modal-content h2 {
+    margin: 0 0 20px 0;
+    color: #ffd700;
+    font-family: 'IM Fell English', serif;
+    font-size: 28px;
+    text-align: center;
+    border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+    padding-bottom: 10px;
+}
+
+.help-modal-content h3 {
+    margin: 15px 0 10px 0;
+    color: #ffd700;
+    font-family: 'IM Fell English', serif;
+    font-size: 18px;
+}
+
+.help-modal-content p {
+    color: #ccc;
+    line-height: 1.6;
+    margin: 10px 0;
+}
+
+.help-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 36px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    line-height: 36px;
+    transition: all 0.2s ease;
+}
+
+.help-modal-close:hover {
+    color: #ffd700;
+    transform: rotate(90deg);
+}
+
+.help-section {
+    margin-bottom: 20px;
+}
+
+.help-shortcuts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.help-shortcuts div {
+    color: #ccc;
+    font-size: 14px;
+}
+
+.help-shortcuts kbd {
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-family: monospace;
+    font-size: 13px;
+    color: #ffd700;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin-right: 8px;
+}
+
+.help-legend {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ccc;
+    font-size: 14px;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.legend-color.spanish { background-color: #ffff00; }
+.legend-color.english { background-color: #ff0000; }
+.legend-color.french { background-color: #0000ff; }
+.legend-color.dutch { background-color: #90ee90; }
+.legend-color.pirate { background-color: #ffffff; }
+.legend-color.native { background-color: #D2691E; }
+.legend-color.jesuit { background-color: #0082ff; }
+.legend-color.infected { background-color: #8B0000; }
+.legend-color.independent { background-color: #ff00ff; }
+.legend-color.terrain-land { background-color: #228B22; }
+.legend-color.terrain-water { background-color: #4169E1; }
+.legend-color.terrain-both { background-color: #D2B48C; }
+
 /* Map tooltip coordinates section */
 .map-tooltip .tooltip-coordinates {
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px solid #444;
+    position: relative;
 }
 
 .map-tooltip .tooltip-grid {
@@ -592,6 +992,36 @@ html, body {
     font-size: 0.85em;
     font-weight: 400;
     color: #999;
+}
+
+.copy-coords-btn {
+    position: absolute;
+    right: 0;
+    top: 8px;
+    background: rgba(255, 215, 0, 0.2);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    border-radius: 3px;
+    color: #ffd700;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.copy-coords-btn:hover {
+    background: rgba(255, 215, 0, 0.4);
+    border-color: #ffd700;
+    transform: scale(1.1);
+}
+
+.copy-coords-btn:active {
+    transform: scale(0.9);
+}
+
+.copy-coords-btn.copied {
+    background: rgba(0, 255, 0, 0.3);
+    border-color: #0f0;
+    color: #0f0;
 }
 
 /* Entity image in tooltip */

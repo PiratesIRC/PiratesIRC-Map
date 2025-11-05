@@ -17,19 +17,25 @@
 <body>
 
     <div class="sidebar">
-        
+
         <div class="sidebar-tabs">
             <button class="tab-btn active" data-tab="ports">Ports</button>
             <button class="tab-btn" data-tab="entities">Entities</button>
         </div>
-        
+
+        <!-- Search Box -->
+        <div class="search-container">
+            <input type="text" id="search-box" placeholder="Search ports/entities..." autocomplete="off">
+            <button id="clear-search" class="clear-search-btn" style="display: none;">×</button>
+        </div>
+
         <p class="last-updated">Last Updated: 10/26/2025</p>
 
         <div class="tab-content active" id="ports-content">
             <div class="port-list" id="port-list">
                 </div>
         </div>
-        
+
         <div class="tab-content" id="entities-content">
             <div class="port-list" id="entity-list">
                 </div>
@@ -40,26 +46,106 @@
     <div class="map-viewport" id="map-viewport">
         <div class="map-container" id="map-container">
             <img src="images/map.jpg" alt="Map of the Caribbean">
-            
+
             <div class="map-tooltip" id="map-tooltip"></div>
             <div class="coordinate-tooltip" id="coordinate-tooltip"></div>
         </div>
 
-        <div class="map-toolbar">
-            <div class="toolbar-section">
-                <div class="toolbar-label">Navigation</div>
-                <div class="pan-controls">
-                    <button class="pan-btn" id="pan-up-btn" title="Pan Up">&#8593;</button>
-                    <div>
-                        <button class="pan-btn" id="pan-left-btn" title="Pan Left">&#8592;</button>
-                        <button class="pan-btn" id="pan-right-btn" title="Pan Right">&#8594;</button>
+        <!-- Zoom Slider -->
+        <div class="zoom-slider-container">
+            <div class="zoom-slider-label">+</div>
+            <input type="range" id="zoom-slider" class="zoom-slider" min="0.25" max="5" step="0.05" value="0.29" orient="vertical">
+            <div class="zoom-slider-label">-</div>
+        </div>
+
+        <!-- Mini Map -->
+        <div class="mini-map" id="mini-map">
+            <canvas id="mini-map-canvas" width="150" height="98"></canvas>
+            <div class="mini-map-viewport" id="mini-map-viewport"></div>
+        </div>
+
+        <!-- Help Button -->
+        <button class="help-button" id="help-button" title="Help & Shortcuts">?</button>
+
+        <!-- Help Modal -->
+        <div class="help-modal" id="help-modal" style="display: none;">
+            <div class="help-modal-content">
+                <button class="help-modal-close" id="help-modal-close">×</button>
+                <h2>Map Controls & Guide</h2>
+
+                <div class="help-section">
+                    <h3>Keyboard Shortcuts</h3>
+                    <div class="help-shortcuts">
+                        <div><kbd>↑ ↓ ← →</kbd> Pan the map</div>
+                        <div><kbd>+ / =</kbd> Zoom in</div>
+                        <div><kbd>- / _</kbd> Zoom out</div>
+                        <div><kbd>ESC</kbd> Close tooltips</div>
                     </div>
-                    <button class="pan-btn" id="pan-down-btn" title="Pan Down">&#8595;</button>
+                </div>
+
+                <div class="help-section">
+                    <h3>Mouse Controls</h3>
+                    <div class="help-shortcuts">
+                        <div>Click marker to center view</div>
+                        <div>Double-click map to zoom in</div>
+                        <div>Scroll wheel to zoom</div>
+                        <div>Drag to pan</div>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3>Copy Coordinates</h3>
+                    <p>Click the 📋 button in tooltips to copy coordinates to clipboard.</p>
+                </div>
+
+                <div class="help-section">
+                    <h3>Faction Colors</h3>
+                    <div class="help-legend">
+                        <div class="legend-item"><span class="legend-color spanish"></span> Spanish</div>
+                        <div class="legend-item"><span class="legend-color english"></span> English</div>
+                        <div class="legend-item"><span class="legend-color french"></span> French</div>
+                        <div class="legend-item"><span class="legend-color dutch"></span> Dutch</div>
+                        <div class="legend-item"><span class="legend-color pirate"></span> Pirate</div>
+                        <div class="legend-item"><span class="legend-color native"></span> Native</div>
+                        <div class="legend-item"><span class="legend-color jesuit"></span> Jesuit</div>
+                        <div class="legend-item"><span class="legend-color infected"></span> Infected</div>
+                        <div class="legend-item"><span class="legend-color independent"></span> Independent</div>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3>Terrain Colors</h3>
+                    <div class="help-legend">
+                        <div class="legend-item"><span class="legend-color terrain-land"></span> Land</div>
+                        <div class="legend-item"><span class="legend-color terrain-water"></span> Water</div>
+                        <div class="legend-item"><span class="legend-color terrain-both"></span> Coastal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-toolbar">
+            <!-- Reset Button -->
+            <div class="toolbar-section">
+                <button class="reset-btn" id="reset-view-btn" title="Reset View (Home)">⌂</button>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="toolbar-section">
+                <div class="toolbar-label">⊕ Nav</div>
+                <div class="pan-controls">
+                    <button class="pan-btn" id="pan-up-btn" title="Pan Up (↑)">&#8593;</button>
+                    <div>
+                        <button class="pan-btn" id="pan-left-btn" title="Pan Left (←)">&#8592;</button>
+                        <button class="pan-btn" id="pan-right-btn" title="Pan Right (→)">&#8594;</button>
+                    </div>
+                    <button class="pan-btn" id="pan-down-btn" title="Pan Down (↓)">&#8595;</button>
                 </div>
             </div>
 
+            <!-- Zoom Controls -->
             <div class="toolbar-section">
-                <div class="toolbar-label">Zoom</div>
+                <div class="toolbar-label">🔍 Zoom</div>
                 <div class="zoom-controls">
                     <div class="zoom-level-display" id="zoom-level-display">1.0x</div>
                     <button class="zoom-btn" id="zoom-in-btn" title="Zoom In (+)">+</button>
@@ -67,22 +153,39 @@
                 </div>
             </div>
 
+            <!-- Current Location Display -->
             <div class="toolbar-section">
-                <div class="toolbar-label">Display</div>
+                <div class="toolbar-label">📍 Location</div>
+                <div class="current-location" id="current-location" title="Current viewport center">
+                    <div class="location-grid" id="location-grid">A1</div>
+                    <div class="location-coords" id="location-coords">20.0°N, 80.0°W</div>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="toolbar-section">
+                <div class="loading-indicator" id="loading-indicator" style="display: none;" title="Updating data...">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+
+            <!-- Display Toggles -->
+            <div class="toolbar-section">
+                <div class="toolbar-label">👁️ Display</div>
                 <div class="toggle-controls">
-                    <label class="toggle-item">
+                    <label class="toggle-item" title="Show/hide ports">
                         <input type="checkbox" id="toggle-ports" checked>
                         <span>Ports</span>
                     </label>
-                    <label class="toggle-item">
+                    <label class="toggle-item" title="Show/hide entities">
                         <input type="checkbox" id="toggle-entities" checked>
                         <span>Entities</span>
                     </label>
-                    <label class="toggle-item">
+                    <label class="toggle-item" title="Show/hide grid">
                         <input type="checkbox" id="toggle-gridlines" checked>
                         <span>Grid</span>
                     </label>
-                    <label class="toggle-item">
+                    <label class="toggle-item" title="Show/hide terrain overlay">
                         <input type="checkbox" id="toggle-terrain">
                         <span>Terrain</span>
                     </label>

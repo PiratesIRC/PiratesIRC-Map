@@ -31,6 +31,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleGridlines = document.getElementById('toggle-gridlines');
     const toggleTerrain = document.getElementById('toggle-terrain');
 
+    // New UI elements
+    const searchBox = document.getElementById('search-box');
+    const clearSearchBtn = document.getElementById('clear-search');
+    const resetViewBtn = document.getElementById('reset-view-btn');
+    const helpButton = document.getElementById('help-button');
+    const helpModal = document.getElementById('help-modal');
+    const helpModalClose = document.getElementById('help-modal-close');
+    const zoomSlider = document.getElementById('zoom-slider');
+    const miniMap = document.getElementById('mini-map');
+    const miniMapCanvas = document.getElementById('mini-map-canvas');
+    const miniMapViewport = document.getElementById('mini-map-viewport');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const locationGrid = document.getElementById('location-grid');
+    const locationCoords = document.getElementById('location-coords');
+
     // --- Constants ---
     const MAP_WIDTH = 3840;
     const MAP_HEIGHT = 2498;
@@ -57,9 +72,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let panY = 0;
     let isDragging = false;
     let startX, startY;
-    
+
+    // Initial view for reset
+    const INITIAL_SCALE = 0.29;
+    let initialPanX = 0;
+    let initialPanY = 0;
+
     // Terrain data
     let terrainData = {};
+
+    // Double-click handling
+    let lastClickTime = 0;
+    const DOUBLE_CLICK_DELAY = 300;
 
     // --- Helper: Convert map coordinates to grid reference ---
     function getGridReference(mapX, mapY) {
@@ -173,8 +197,27 @@ document.addEventListener('DOMContentLoaded', () => {
             latlonDiv.className = 'tooltip-latlon';
             latlonDiv.textContent = `${gridRef.latitude}°N, ${gridRef.longitude}°W`;
 
+            // Add copy button
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-coords-btn';
+            copyBtn.textContent = '📋';
+            copyBtn.title = 'Copy coordinates';
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const coordText = `${gridRef.full} (${gridRef.latitude}°N, ${gridRef.longitude}°W)`;
+                navigator.clipboard.writeText(coordText).then(() => {
+                    copyBtn.classList.add('copied');
+                    copyBtn.textContent = '✓';
+                    setTimeout(() => {
+                        copyBtn.classList.remove('copied');
+                        copyBtn.textContent = '📋';
+                    }, 2000);
+                });
+            });
+
             coordDiv.appendChild(gridDiv);
             coordDiv.appendChild(latlonDiv);
+            coordDiv.appendChild(copyBtn);
             mapTooltip.appendChild(coordDiv);
         }
 
@@ -389,6 +432,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             addInteractivity(listItem, point, loc);
         });
+
+        // Update mini-map after ports are loaded
+        setTimeout(() => drawMiniMap(), 100);
     }
 
     function loadEntityData(entities) {
@@ -644,6 +690,13 @@ document.addEventListener('DOMContentLoaded', () => {
         zoomLevelDisplay.textContent = `${scale.toFixed(1)}x`;
 
         mapContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+
+        // Update zoom slider
+        zoomSlider.value = scale;
+
+        // Update mini-map and current location
+        updateMiniMapViewport();
+        updateCurrentLocation();
     }
 
     function zoom(delta, clientX, clientY) {
@@ -684,6 +737,110 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTransform();
     }
 
+    function resetView() {
+        mapContainer.classList.add('is-transitioning');
+        scale = INITIAL_SCALE;
+        panX = initialPanX;
+        panY = initialPanY;
+        updateTransform();
+    }
+
+    // --- Current Location Display ---
+    function updateCurrentLocation() {
+        const viewportWidth = getViewportWidth();
+        const viewportHeight = getViewportHeight();
+
+        // Calculate center of viewport in map coordinates
+        const centerX = (viewportWidth / 2 - panX) / scale;
+        const centerY = (viewportHeight / 2 - panY) / scale;
+
+        const gridRef = getGridReference(centerX, centerY);
+        if (gridRef) {
+            locationGrid.textContent = gridRef.major;
+            locationCoords.textContent = `${gridRef.latitude}°N, ${gridRef.longitude}°W`;
+        }
+    }
+
+    // --- Mini-map Functions ---
+    function drawMiniMap() {
+        const ctx = miniMapCanvas.getContext('2d');
+        const canvas = miniMapCanvas;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw simplified map (just a dark background with grid outline)
+        ctx.fillStyle = '#0c0a09';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw grid outline
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+        ctx.lineWidth = 1;
+        const scaleX = canvas.width / MAP_WIDTH;
+        const scaleY = canvas.height / MAP_HEIGHT;
+        ctx.strokeRect(
+            GRID_START_X * scaleX,
+            GRID_START_Y * scaleY,
+            (GRID_COLS * CELL_WIDTH) * scaleX,
+            (GRID_ROWS * CELL_HEIGHT) * scaleY
+        );
+
+        // Draw ports as tiny dots
+        document.querySelectorAll('.map-point').forEach(point => {
+            const x = parseFloat(point.style.left);
+            const y = parseFloat(point.style.top);
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath();
+            ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        updateMiniMapViewport();
+    }
+
+    function updateMiniMapViewport() {
+        const scaleX = 150 / MAP_WIDTH;
+        const scaleY = 98 / MAP_HEIGHT;
+
+        // Calculate what part of the map is visible
+        const viewportWidth = getViewportWidth();
+        const viewportHeight = getViewportHeight();
+
+        const visibleLeft = -panX / scale;
+        const visibleTop = -panY / scale;
+        const visibleWidth = viewportWidth / scale;
+        const visibleHeight = viewportHeight / scale;
+
+        // Update viewport rectangle
+        miniMapViewport.style.left = (visibleLeft * scaleX) + 'px';
+        miniMapViewport.style.top = (visibleTop * scaleY) + 'px';
+        miniMapViewport.style.width = (visibleWidth * scaleX) + 'px';
+        miniMapViewport.style.height = (visibleHeight * scaleY) + 'px';
+    }
+
+    // --- Search/Filter Functions ---
+    function filterItems() {
+        const searchTerm = searchBox.value.toLowerCase().trim();
+        clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
+
+        const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+        const items = document.querySelectorAll(`#${activeTab}-content .port-item`);
+
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function clearSearch() {
+        searchBox.value = '';
+        filterItems();
+    }
+
     // --- 5. Initial Setup ---
 
     panX = (getViewportWidth() - (MAP_WIDTH * scale)) / 2;
@@ -695,10 +852,20 @@ document.addEventListener('DOMContentLoaded', () => {
         panY = 0;
     }
 
+    // Save initial view
+    initialPanX = panX;
+    initialPanY = panY;
+
     createGridLines();
     loadAllData();
 
-    setInterval(loadAllData, 60000);
+    setInterval(() => {
+        loadingIndicator.style.display = 'flex';
+        loadAllData();
+        setTimeout(() => {
+            loadingIndicator.style.display = 'none';
+        }, 1000);
+    }, 60000);
 
     // --- 6. Event Listeners ---
 
@@ -713,6 +880,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // NEW: Click handler for coordinate display
     mapViewport.addEventListener('click', (e) => {
+        const currentTime = Date.now();
+        const isDoubleClick = (currentTime - lastClickTime) < DOUBLE_CLICK_DELAY;
+        lastClickTime = currentTime;
+
+        // Handle double-click - zoom in at click point
+        if (isDoubleClick) {
+            hideMapTooltip();
+            coordinateTooltip.style.visibility = 'hidden';
+
+            const containerRect = mapContainer.getBoundingClientRect();
+            const clickX = e.clientX - containerRect.left;
+            const clickY = e.clientY - containerRect.top;
+            const mapX = clickX / scale;
+            const mapY = clickY / scale;
+
+            mapContainer.classList.add('is-transitioning');
+            const newScale = Math.min(MAX_SCALE, scale * 1.5);
+            const clientX_relative = e.clientX - SIDEBAR_WIDTH;
+            panX = clientX_relative - (mapX * newScale);
+            panY = e.clientY - (mapY * newScale);
+            scale = newScale;
+            updateTransform();
+            return;
+        }
+
         // Ignore clicks on interactive elements
         if (e.target.closest('.map-point') ||
             e.target.closest('.map-entity') ||
@@ -729,7 +921,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const containerRect = mapContainer.getBoundingClientRect();
         const clickX = e.clientX - containerRect.left;
         const clickY = e.clientY - containerRect.top;
-        
+
         const mapX = clickX / scale;
         const mapY = clickY / scale;
 
@@ -794,7 +986,13 @@ document.addEventListener('DOMContentLoaded', () => {
     panRightBtn.addEventListener('click', () => panMap(-PAN_AMOUNT, 0));
 
     window.addEventListener('keydown', (e) => {
-        if (e.key === '+' || e.key === '=') {
+        if (e.key === 'Escape') {
+            hideMapTooltip();
+            coordinateTooltip.style.visibility = 'hidden';
+            if (helpModal.style.display === 'flex') {
+                helpModal.style.display = 'none';
+            }
+        } else if (e.key === '+' || e.key === '=') {
             e.preventDefault();
             zoomCenter(1);
         } else if (e.key === '-' || e.key === '_') {
@@ -813,6 +1011,61 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             panMap(-PAN_AMOUNT, 0);
         }
+    });
+
+    // Search box events
+    searchBox.addEventListener('input', filterItems);
+    clearSearchBtn.addEventListener('click', clearSearch);
+
+    // Reset view button
+    resetViewBtn.addEventListener('click', resetView);
+
+    // Help modal events
+    helpButton.addEventListener('click', () => {
+        helpModal.style.display = 'flex';
+    });
+
+    helpModalClose.addEventListener('click', () => {
+        helpModal.style.display = 'none';
+    });
+
+    helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) {
+            helpModal.style.display = 'none';
+        }
+    });
+
+    // Zoom slider
+    zoomSlider.addEventListener('input', (e) => {
+        mapContainer.classList.remove('is-transitioning');
+        const newScale = parseFloat(e.target.value);
+        const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
+        const clientY = getViewportHeight() / 2;
+
+        const clientX_relative = clientX - SIDEBAR_WIDTH;
+        const centerMapX = (clientX_relative - panX) / scale;
+        const centerMapY = (clientY - panY) / scale;
+
+        panX = clientX_relative - (centerMapX * newScale);
+        panY = clientY - (centerMapY * newScale);
+        scale = newScale;
+
+        updateTransform();
+    });
+
+    // Mini-map click to jump
+    miniMap.addEventListener('click', (e) => {
+        const rect = miniMap.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        const scaleX = MAP_WIDTH / 150;
+        const scaleY = MAP_HEIGHT / 98;
+
+        const mapX = clickX * scaleX;
+        const mapY = clickY * scaleY;
+
+        focusOnPoint(mapX, mapY);
     });
 
     window.addEventListener('resize', () => {
