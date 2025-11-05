@@ -177,8 +177,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get grid reference for this location
         const gridRef = getGridReference(mapX, mapY);
 
-        // Check if we're in columns Q or R (rightmost columns, indices 16 and 17)
-        const isRightmostColumns = gridRef && (gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
+        // Check if we're in columns Q or R (rightmost columns)
+        const isColumnQorR = gridRef && (gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
+
+        // Check if we're in rows 1 or 2 (top rows)
+        const isRow1or2 = gridRef && (gridRef.major.endsWith('1') || gridRef.major.endsWith('2'));
 
         // Clear existing content
         mapTooltip.innerHTML = '';
@@ -263,16 +266,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalXOffset = tooltipXOffset_map;
 
         const tooltipScreenWidth = tooltipWidth / scale;
-        // Force tooltip to the left for columns Q/R, or if it would go off screen
-        if (isRightmostColumns || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
-            // Add extra offset for rightmost columns to move tooltip significantly left
-            const extraOffset = isRightmostColumns ? (tooltipWidth_map * 0.5) : 0;
-            finalXOffset = -tooltipXOffset_map - tooltipWidth_map - extraOffset;
+        // Force tooltip to the left for columns Q or R, or if it would go off screen
+        if (isColumnQorR || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
+            finalXOffset = -tooltipXOffset_map - tooltipWidth_map;
         }
 
         let finalYOffset = -50;
 
-        if (pointCenterY_screen + (tooltipHeight / 2) > viewportBottom) {
+        // Position tooltip below for rows 1 and 2
+        if (isRow1or2) {
+            finalYOffset = 100;
+        }
+        // Otherwise use default vertical centering with viewport adjustments
+        else if (pointCenterY_screen + (tooltipHeight / 2) > viewportBottom) {
             finalYOffset = -100;
         }
         else if (pointCenterY_screen - (tooltipHeight / 2) < viewportTop) {
@@ -882,6 +888,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
                 ctx.fill();
             });
+        }
+
+        // Draw coastal tiles if only terrain is selected
+        if (toggleTerrain.checked && !togglePorts.checked && !toggleEntities.checked) {
+            ctx.fillStyle = '#d4a574'; // Sandy/beige color for coastal tiles
+
+            // Iterate through terrain data to find coastal tiles
+            for (const [key, terrain] of Object.entries(terrainData)) {
+                if (terrain === 'both') {
+                    // Parse grid reference like "A1-3-2"
+                    const match = key.match(/^([A-R])(\d+)-(\d)-(\d)$/);
+                    if (match) {
+                        const [, colLetter, rowNum, subCol, subRow] = match;
+                        const majorCol = colLetter.charCodeAt(0) - 65; // A=0
+                        const majorRow = parseInt(rowNum) - 1; // Convert to 0-based
+                        const subColNum = parseInt(subCol);
+                        const subRowNum = parseInt(subRow);
+
+                        // Calculate pixel position
+                        const x = GRID_START_X + (majorCol * CELL_WIDTH) + ((subColNum - 0.5) / SUBGRID_DIVISIONS) * CELL_WIDTH;
+                        const y = GRID_START_Y + (majorRow * CELL_HEIGHT) + ((subRowNum - 0.5) / SUBGRID_DIVISIONS) * CELL_HEIGHT;
+
+                        // Draw dot on minimap
+                        ctx.beginPath();
+                        ctx.arc(x * scaleX, y * scaleY, 1, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
         }
 
         updateMiniMapViewport();
