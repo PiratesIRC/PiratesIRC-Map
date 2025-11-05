@@ -4,7 +4,7 @@ An interactive web-based map visualization for the game PiratesIRC, featuring zo
 
 ## Live View
 
-View the live map at: **https://piratesirc.github.io/PiratesIRC-Map/**
+**[View the live map here](https://piratesirc.github.io/PiratesIRC-Map/)**
 
 ## Features
 

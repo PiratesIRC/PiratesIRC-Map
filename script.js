@@ -25,6 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Toggle controls
+    const togglePorts = document.getElementById('toggle-ports');
+    const toggleEntities = document.getElementById('toggle-entities');
+    const toggleGridlines = document.getElementById('toggle-gridlines');
+    const toggleTerrain = document.getElementById('toggle-terrain');
+
     // --- Constants ---
     const MAP_WIDTH = 3840;
     const MAP_HEIGHT = 2498;
@@ -702,9 +708,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // NEW: Click handler for coordinate display
     mapViewport.addEventListener('click', (e) => {
         // Ignore clicks on interactive elements
-        if (e.target.closest('.map-point') || 
-            e.target.closest('.map-entity') || 
-            e.target.closest('.zoom-btn')) {
+        if (e.target.closest('.map-point') ||
+            e.target.closest('.map-entity') ||
+            e.target.closest('.map-toolbar')) {
             return;
         }
 
@@ -788,6 +794,18 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.key === '-' || e.key === '_') {
             e.preventDefault();
             zoomCenter(-1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            panMap(0, PAN_AMOUNT);
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            panMap(0, -PAN_AMOUNT);
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            panMap(PAN_AMOUNT, 0);
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            panMap(-PAN_AMOUNT, 0);
         }
     });
 
@@ -798,5 +816,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mapContainer.addEventListener('transitionend', () => {
         mapContainer.classList.remove('is-transitioning');
+    });
+
+    // --- Terrain Overlay Functions ---
+    function createTerrainOverlay() {
+        // Remove existing terrain cells
+        document.querySelectorAll('.terrain-cell').forEach(cell => cell.remove());
+
+        // Create a terrain cell for each sub-grid cell
+        for (let col = 0; col < GRID_COLS; col++) {
+            for (let row = 0; row < GRID_ROWS; row++) {
+                const colLetter = String.fromCharCode(65 + col);
+                const rowNumber = row + 1;
+
+                for (let subCol = 1; subCol <= SUBGRID_DIVISIONS; subCol++) {
+                    for (let subRow = 1; subRow <= SUBGRID_DIVISIONS; subRow++) {
+                        const terrainKey = `${colLetter}${rowNumber}-${subCol}-${subRow}`;
+                        const terrain = terrainData[terrainKey];
+
+                        if (terrain && terrain !== 'unknown') {
+                            const cellX = GRID_START_X + (col * CELL_WIDTH) + ((subCol - 1) * (CELL_WIDTH / SUBGRID_DIVISIONS));
+                            const cellY = GRID_START_Y + (row * CELL_HEIGHT) + ((subRow - 1) * (CELL_HEIGHT / SUBGRID_DIVISIONS));
+                            const cellWidth = CELL_WIDTH / SUBGRID_DIVISIONS;
+                            const cellHeight = CELL_HEIGHT / SUBGRID_DIVISIONS;
+
+                            const terrainCell = document.createElement('div');
+                            terrainCell.className = `terrain-cell ${terrain}`;
+                            terrainCell.style.left = cellX + 'px';
+                            terrainCell.style.top = cellY + 'px';
+                            terrainCell.style.width = cellWidth + 'px';
+                            terrainCell.style.height = cellHeight + 'px';
+                            mapContainer.appendChild(terrainCell);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Toggle Event Listeners ---
+    togglePorts.addEventListener('change', () => {
+        const ports = document.querySelectorAll('.map-point');
+        ports.forEach(port => {
+            port.style.display = togglePorts.checked ? 'block' : 'none';
+        });
+    });
+
+    toggleEntities.addEventListener('change', () => {
+        const entities = document.querySelectorAll('.map-entity');
+        entities.forEach(entity => {
+            entity.style.display = toggleEntities.checked ? 'block' : 'none';
+        });
+    });
+
+    toggleGridlines.addEventListener('change', () => {
+        const gridLines = document.querySelectorAll('.map-grid-line');
+        gridLines.forEach(line => {
+            line.style.display = toggleGridlines.checked ? 'block' : 'none';
+        });
+
+        const gridLabels = document.querySelectorAll('.map-grid-label');
+        gridLabels.forEach(label => {
+            label.style.display = toggleGridlines.checked ? 'block' : 'none';
+        });
+    });
+
+    toggleTerrain.addEventListener('change', () => {
+        if (toggleTerrain.checked) {
+            createTerrainOverlay();
+        } else {
+            document.querySelectorAll('.terrain-cell').forEach(cell => cell.remove());
+        }
     });
 });
