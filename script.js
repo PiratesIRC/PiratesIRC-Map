@@ -194,11 +194,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tooltipXOffset_screen = 15;
         const tooltipXOffset_map = tooltipXOffset_screen / scale;
-        const tooltipWidth_map = tooltipWidth / scale;
+        // Tooltip width needs to account for both counter-scaling and map scaling
+        const tooltipWidth_map = tooltipWidth / (scale * scale);
 
         let finalXOffset = tooltipXOffset_map;
 
-        if (pointCenterX_screen + tooltipXOffset_screen + tooltipWidth > viewportRight) {
+        const tooltipScreenWidth = tooltipWidth / scale;
+        if (pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
             finalXOffset = -tooltipXOffset_map - tooltipWidth_map;
         }
 
