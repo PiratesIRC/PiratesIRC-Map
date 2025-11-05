@@ -563,13 +563,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn(`Filtered out ${locations.length - validLocations.length} invalid ports`);
             }
 
-            // Filter and validate entity data
-            const validEntities = Array.isArray(entities)
-                ? entities.filter(ent => validateEntity(ent, MAP_WIDTH, MAP_HEIGHT))
+            // Extract metadata from entities (if present)
+            let entitiesMetadata = null;
+            const entitiesWithoutMetadata = Array.isArray(entities)
+                ? entities.filter(ent => {
+                    if (ent._metadata) {
+                        entitiesMetadata = ent;
+                        return false;
+                    }
+                    return true;
+                })
                 : [];
 
-            if (validEntities.length !== entities.length) {
-                console.warn(`Filtered out ${entities.length - validEntities.length} invalid entities`);
+            // Update last-updated date from metadata
+            if (entitiesMetadata && entitiesMetadata.lastUpdated) {
+                const lastUpdatedElement = document.getElementById('last-updated');
+                if (lastUpdatedElement) {
+                    lastUpdatedElement.textContent = `Last Updated: ${entitiesMetadata.lastUpdated}`;
+                }
+            }
+
+            // Filter and validate entity data
+            const validEntities = entitiesWithoutMetadata.filter(ent => validateEntity(ent, MAP_WIDTH, MAP_HEIGHT));
+
+            if (validEntities.length !== entitiesWithoutMetadata.length) {
+                console.warn(`Filtered out ${entitiesWithoutMetadata.length - validEntities.length} invalid entities`);
             }
 
             loadPortData(validLocations);
