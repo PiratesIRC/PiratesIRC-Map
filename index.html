@@ -45,19 +45,48 @@
             <div class="coordinate-tooltip" id="coordinate-tooltip"></div>
         </div>
 
-        <div class="map-ui-controls">
-            <div class="pan-controls">
-                <button class="pan-btn" id="pan-up-btn" title="Pan Up">&#8593;</button>
-                <div>
-                    <button class="pan-btn" id="pan-left-btn" title="Pan Left">&#8592;</button>
-                    <button class="pan-btn" id="pan-right-btn" title="Pan Right">&#8594;</button>
+        <div class="map-toolbar">
+            <div class="toolbar-section">
+                <div class="toolbar-label">Navigation</div>
+                <div class="pan-controls">
+                    <button class="pan-btn" id="pan-up-btn" title="Pan Up">&#8593;</button>
+                    <div>
+                        <button class="pan-btn" id="pan-left-btn" title="Pan Left">&#8592;</button>
+                        <button class="pan-btn" id="pan-right-btn" title="Pan Right">&#8594;</button>
+                    </div>
+                    <button class="pan-btn" id="pan-down-btn" title="Pan Down">&#8595;</button>
                 </div>
-                <button class="pan-btn" id="pan-down-btn" title="Pan Down">&#8595;</button>
             </div>
-            <div class="zoom-controls">
-                <div class="zoom-level-display" id="zoom-level-display">1.0x</div>
-                <button class="zoom-btn" id="zoom-in-btn" title="Zoom In (+)">+</button>
-                <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out (-)">-</button>
+
+            <div class="toolbar-section">
+                <div class="toolbar-label">Zoom</div>
+                <div class="zoom-controls">
+                    <div class="zoom-level-display" id="zoom-level-display">1.0x</div>
+                    <button class="zoom-btn" id="zoom-in-btn" title="Zoom In (+)">+</button>
+                    <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out (-)">-</button>
+                </div>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="toolbar-label">Display</div>
+                <div class="toggle-controls">
+                    <label class="toggle-item">
+                        <input type="checkbox" id="toggle-ports" checked>
+                        <span>Ports</span>
+                    </label>
+                    <label class="toggle-item">
+                        <input type="checkbox" id="toggle-entities" checked>
+                        <span>Entities</span>
+                    </label>
+                    <label class="toggle-item">
+                        <input type="checkbox" id="toggle-gridlines" checked>
+                        <span>Grid</span>
+                    </label>
+                    <label class="toggle-item">
+                        <input type="checkbox" id="toggle-terrain">
+                        <span>Terrain</span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
