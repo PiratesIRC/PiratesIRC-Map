@@ -9,7 +9,8 @@
     "description": "A 104-gun first-rate ship of the line of the Royal Navy. (England)",
     "image": "pirate-ship-062.png",
     "x": 1000,
-    "y": 800
+    "y": 800,
+    "type": "ship"
   },
   {
     "id": "ship-002",
@@ -17,7 +18,8 @@
     "description": "A 74-gun ship of the line. (France)",
     "image": "ship2.png",
     "x": 1500,
-    "y": 950
+    "y": 950,
+    "type": "ship"
   },
   {
     "id": "ship-003",
@@ -25,7 +27,8 @@
     "description": "The infamous pirate ship (Pirate)",
     "image": "pirate-ship-onyx12.png",
     "x": 1150,
-    "y": 1950
+    "y": 1950,
+    "type": "ship"
   },
   {
     "id": "storm-001",
@@ -33,7 +36,8 @@
     "description": "A dangerous storm system. Avoid at all costs.",
     "image": "storm.png",
     "x": 1800,
-    "y": 600
+    "y": 600,
+    "type": "weather"
   },
   {
     "id": "storm-002",
@@ -41,6 +45,7 @@
     "description": "A small storm system. Best to avoid!",
     "image": "storm4.png",
     "x": 1800,
-    "y": 600
+    "y": 600,
+    "type": "weather"
   }
 ]
