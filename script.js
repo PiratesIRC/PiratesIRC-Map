@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const helpButton = document.getElementById('help-button');
     const helpModal = document.getElementById('help-modal');
     const helpModalClose = document.getElementById('help-modal-close');
-    const zoomSlider = document.getElementById('zoom-slider');
     const miniMap = document.getElementById('mini-map');
     const miniMapCanvas = document.getElementById('mini-map-canvas');
     const miniMapViewport = document.getElementById('mini-map-viewport');
@@ -45,8 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const toolbarCollapseBtn = document.getElementById('toolbar-collapse-btn');
     const toolbarExpandBtn = document.getElementById('toolbar-expand-btn');
     const mapToolbar = document.querySelector('.map-toolbar');
-    const zoomSliderPlus = document.getElementById('zoom-slider-plus');
-    const zoomSliderMinus = document.getElementById('zoom-slider-minus');
+    const zoomInBtn = document.getElementById('zoom-in-btn');
+    const zoomOutBtn = document.getElementById('zoom-out-btn');
     const versionBadge = document.getElementById('version-badge');
     const jollyRoger = document.getElementById('jolly-roger');
     const cannonball = document.getElementById('cannonball');
@@ -260,21 +259,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Scale-aware base offset: smaller at max zoom (closer to entity), larger at min zoom
         const baseOffsetScreen = 10 + (1 - (scale / MAX_SCALE)) * 5; // 10px at max zoom, ~15px at min zoom
-        const tooltipXOffset_map = baseOffsetScreen / scale;
-        // Tooltip width needs to account for both counter-scaling and map scaling
-        const tooltipWidth_map = tooltipWidth / (scale * scale);
 
-        let finalXOffset = tooltipXOffset_map;
-
+        // Work in screen space for positioning calculations
         const tooltipScreenWidth = tooltipWidth / scale;
+        let finalXOffsetScreen = baseOffsetScreen;
+
         // Force tooltip to the left for columns Q/R, or if it would go off screen
         if (isRightmostColumns || pointCenterX_screen + baseOffsetScreen + tooltipScreenWidth > viewportRight) {
-            // Scale-aware extra offset multiplier: quadratic scaling prevents off-screen at min zoom
-            const scaleRatio = (scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE); // 0 at min zoom, 1 at max zoom
-            const offsetMultiplier = scaleRatio * scaleRatio * 2.5; // 0 at min zoom, 2.5 at max zoom (quadratic)
-            const extraOffset = isRightmostColumns ? (tooltipWidth_map * offsetMultiplier) : 0;
-            finalXOffset = -tooltipXOffset_map - tooltipWidth_map - extraOffset;
+            // Calculate left positioning in screen space
+            // Base: position to the left of entity
+            finalXOffsetScreen = -baseOffsetScreen - tooltipScreenWidth;
+
+            // Scale-aware extra offset for rightmost columns only
+            if (isRightmostColumns) {
+                const scaleRatio = (scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE); // 0 at min zoom, 1 at max zoom
+                const extraOffsetMultiplier = scaleRatio * scaleRatio * 2.5; // 0 at min zoom, 2.5 at max zoom (quadratic)
+                const extraOffsetScreen = tooltipScreenWidth * extraOffsetMultiplier;
+                finalXOffsetScreen -= extraOffsetScreen;
+            }
         }
+
+        // Convert final screen offset to map space
+        const finalXOffset = finalXOffsetScreen / scale;
 
         let finalYOffset = -50;
 
@@ -765,9 +771,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSubGridVisibility();
 
         mapContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-
-        // Update zoom slider
-        zoomSlider.value = scale;
 
         // Update mini-map and current location
         updateMiniMapViewport();
@@ -1424,24 +1427,6 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         }, 500);
     });
 
-    // Zoom slider
-    zoomSlider.addEventListener('input', (e) => {
-        mapContainer.classList.remove('is-transitioning');
-        const newScale = parseFloat(e.target.value);
-        const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
-        const clientY = getViewportHeight() / 2;
-
-        const clientX_relative = clientX - SIDEBAR_WIDTH;
-        const centerMapX = (clientX_relative - panX) / scale;
-        const centerMapY = (clientY - panY) / scale;
-
-        panX = clientX_relative - (centerMapX * newScale);
-        panY = clientY - (centerMapY * newScale);
-        scale = newScale;
-
-        updateTransform();
-    });
-
     // Mini-map click to jump
     miniMap.addEventListener('click', (e) => {
         const rect = miniMap.getBoundingClientRect();
@@ -1466,8 +1451,8 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         mapToolbar.classList.remove('collapsed');
     });
 
-    // Zoom slider +/- buttons
-    zoomSliderPlus.addEventListener('click', (e) => {
+    // Zoom in/out buttons
+    zoomInBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         const newScale = Math.min(MAX_SCALE, scale + ZOOM_SPEED * scale);
@@ -1485,12 +1470,7 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         updateTransform();
     });
 
-    zoomSliderPlus.addEventListener('dblclick', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    });
-
-    zoomSliderMinus.addEventListener('click', (e) => {
+    zoomOutBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         const newScale = Math.max(MIN_SCALE, scale - ZOOM_SPEED * scale);
@@ -1506,11 +1486,6 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         scale = newScale;
 
         updateTransform();
-    });
-
-    zoomSliderMinus.addEventListener('dblclick', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
     });
 
     window.addEventListener('resize', () => {
@@ -1599,14 +1574,6 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
     const toggleControls = document.querySelector('.toggle-controls');
     if (toggleControls) {
         toggleControls.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    }
-
-    // Prevent click-through to map from zoom slider
-    const zoomSliderContainer = document.querySelector('.zoom-slider-container');
-    if (zoomSliderContainer) {
-        zoomSliderContainer.addEventListener('click', (e) => {
             e.stopPropagation();
         });
     }
