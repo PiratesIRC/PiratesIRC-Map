@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const helpButton = document.getElementById('help-button');
     const helpModal = document.getElementById('help-modal');
     const helpModalClose = document.getElementById('help-modal-close');
-    const zoomSlider = document.getElementById('zoom-slider');
     const miniMap = document.getElementById('mini-map');
     const miniMapCanvas = document.getElementById('mini-map-canvas');
     const miniMapViewport = document.getElementById('mini-map-viewport');
@@ -45,8 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const toolbarCollapseBtn = document.getElementById('toolbar-collapse-btn');
     const toolbarExpandBtn = document.getElementById('toolbar-expand-btn');
     const mapToolbar = document.querySelector('.map-toolbar');
-    const zoomSliderPlus = document.getElementById('zoom-slider-plus');
-    const zoomSliderMinus = document.getElementById('zoom-slider-minus');
+    const zoomInBtn = document.getElementById('zoom-in-btn');
+    const zoomOutBtn = document.getElementById('zoom-out-btn');
     const versionBadge = document.getElementById('version-badge');
     const jollyRoger = document.getElementById('jolly-roger');
     const cannonball = document.getElementById('cannonball');
@@ -183,6 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if we're in rows 1 or 2 (top rows)
         const isRow1or2 = gridRef && (gridRef.major.endsWith('1') || gridRef.major.endsWith('2'));
 
+        // Check if we're in top rows (A1, A2) for vertical positioning
+        const isTopRows = gridRef && (gridRef.major.startsWith('A1') || gridRef.major.startsWith('A2'));
+
         // Clear existing content
         mapTooltip.innerHTML = '';
 
@@ -258,26 +260,38 @@ document.addEventListener('DOMContentLoaded', () => {
         const pointCenterX_screen = rect.left + (rect.width / 2);
         const pointCenterY_screen = rect.top + (rect.height / 2);
 
-        const tooltipXOffset_screen = 15;
-        const tooltipXOffset_map = tooltipXOffset_screen;
-        // Tooltip width accounts for counter-scaling in transform
-        const tooltipWidth_map = tooltipWidth;
+        // Scale-aware base offset: smaller at max zoom (closer to entity), larger at min zoom
+        const baseOffsetScreen = 10 + (1 - (scale / MAX_SCALE)) * 5; // 10px at max zoom, ~15px at min zoom
 
-        let finalXOffset = tooltipXOffset_map;
-
+        // After counter-scaling, tooltip width on screen is just tooltipWidth (200px)
         const tooltipScreenWidth = tooltipWidth;
-        // Force tooltip to the left for columns Q or R, or if it would go off screen
-        if (isColumnQorR || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
-            finalXOffset = -tooltipXOffset_map - tooltipWidth_map;
+
+        // Calculate offset in map space (before transforms)
+        const baseOffsetMap = baseOffsetScreen / scale;
+        const tooltipWidthMap = tooltipWidth / (scale * scale);
+
+        let finalXOffset = baseOffsetMap;
+
+        // Force tooltip to the left for columns Q/R, or if it would go off screen
+        if (isRightmostColumns || pointCenterX_screen + baseOffsetScreen + tooltipScreenWidth > viewportRight) {
+            // Position to the left of entity
+            finalXOffset = -baseOffsetMap - tooltipWidthMap;
+
+            // Scale-aware extra offset for rightmost columns only
+            if (isRightmostColumns) {
+                const scaleRatio = (scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE); // 0 at min zoom, 1 at max zoom
+                const extraOffsetMultiplier = scaleRatio * scaleRatio * 2.5; // 0 at min zoom, 2.5 at max zoom (quadratic)
+                const extraOffsetMap = tooltipWidthMap * extraOffsetMultiplier;
+                finalXOffset -= extraOffsetMap;
+            }
         }
 
         let finalYOffset = -50;
 
-        // Position tooltip below for rows 1 and 2
-        if (isRow1or2) {
-            finalYOffset = 100;
+        // For top rows (A1, A2) at max zoom, position tooltip below to avoid top edge
+        if (isTopRows && scale >= MAX_SCALE * 0.7) {
+            finalYOffset = 50; // Position below entity
         }
-        // Otherwise use default vertical centering with viewport adjustments
         else if (pointCenterY_screen + (tooltipHeight / 2) > viewportBottom) {
             finalYOffset = -100;
         }
@@ -761,9 +775,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSubGridVisibility();
 
         mapContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-
-        // Update zoom slider
-        zoomSlider.value = scale;
 
         // Update mini-map and current location
         updateMiniMapViewport();
@@ -1480,24 +1491,6 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         }, 500);
     });
 
-    // Zoom slider
-    zoomSlider.addEventListener('input', (e) => {
-        mapContainer.classList.remove('is-transitioning');
-        const newScale = parseFloat(e.target.value);
-        const clientX = (getViewportWidth() / 2) + SIDEBAR_WIDTH;
-        const clientY = getViewportHeight() / 2;
-
-        const clientX_relative = clientX - SIDEBAR_WIDTH;
-        const centerMapX = (clientX_relative - panX) / scale;
-        const centerMapY = (clientY - panY) / scale;
-
-        panX = clientX_relative - (centerMapX * newScale);
-        panY = clientY - (centerMapY * newScale);
-        scale = newScale;
-
-        updateTransform();
-    });
-
     // Mini-map click to jump
     miniMap.addEventListener('click', (e) => {
         const rect = miniMap.getBoundingClientRect();
@@ -1522,8 +1515,8 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         mapToolbar.classList.remove('collapsed');
     });
 
-    // Zoom slider +/- buttons
-    zoomSliderPlus.addEventListener('click', (e) => {
+    // Zoom in/out buttons
+    zoomInBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         const newScale = Math.min(MAX_SCALE, scale + ZOOM_SPEED * scale);
@@ -1541,12 +1534,7 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         updateTransform();
     });
 
-    zoomSliderPlus.addEventListener('dblclick', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    });
-
-    zoomSliderMinus.addEventListener('click', (e) => {
+    zoomOutBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         const newScale = Math.max(MIN_SCALE, scale - ZOOM_SPEED * scale);
@@ -1562,11 +1550,6 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         scale = newScale;
 
         updateTransform();
-    });
-
-    zoomSliderMinus.addEventListener('dblclick', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
     });
 
     window.addEventListener('resize', () => {
@@ -1655,14 +1638,6 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
     const toggleControls = document.querySelector('.toggle-controls');
     if (toggleControls) {
         toggleControls.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    }
-
-    // Prevent click-through to map from zoom slider
-    const zoomSliderContainer = document.querySelector('.zoom-slider-container');
-    if (zoomSliderContainer) {
-        zoomSliderContainer.addEventListener('click', (e) => {
             e.stopPropagation();
         });
     }

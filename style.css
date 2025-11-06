@@ -511,6 +511,26 @@ html, body {
     transform: scale(0.95);
 }
 
+/* Zoom buttons - distinctive styling */
+#zoom-in-btn,
+#zoom-out-btn {
+    background-color: rgba(255, 215, 0, 0.25);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    color: #ffd700;
+}
+
+#zoom-in-btn:hover,
+#zoom-out-btn:hover {
+    background-color: rgba(255, 215, 0, 0.45);
+    border-color: #ffd700;
+    color: #fff;
+}
+
+#zoom-in-btn:active,
+#zoom-out-btn:active {
+    background-color: rgba(255, 215, 0, 0.2);
+}
+
 .zoom-controls {
     display: flex;
     flex-direction: column;
@@ -680,7 +700,7 @@ html, body {
     border-radius: 5px;
     padding: 10px;
     box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
-    z-index: 12;
+    z-index: 100;
 
     /* transform is now set entirely by JS to include counter-scale */
 
@@ -720,7 +740,7 @@ html, body {
     border-radius: 4px;
     padding: 8px 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    z-index: 13;
+    z-index: 100;
     
     visibility: hidden;
     opacity: 0;
