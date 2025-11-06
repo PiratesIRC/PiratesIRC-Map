@@ -180,6 +180,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if we're in columns Q or R (rightmost columns, indices 16 and 17)
         const isRightmostColumns = gridRef && (gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
 
+        // Check if we're in top rows (A1, A2) for vertical positioning
+        const isTopRows = gridRef && (gridRef.major.startsWith('A1') || gridRef.major.startsWith('A2'));
+
         // Clear existing content
         mapTooltip.innerHTML = '';
 
@@ -266,16 +269,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const tooltipScreenWidth = tooltipWidth / scale;
         // Force tooltip to the left for columns Q/R, or if it would go off screen
         if (isRightmostColumns || pointCenterX_screen + baseOffsetScreen + tooltipScreenWidth > viewportRight) {
-            // Scale-aware extra offset multiplier: larger at max zoom, smaller at min zoom
+            // Scale-aware extra offset multiplier: quadratic scaling prevents off-screen at min zoom
             const scaleRatio = (scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE); // 0 at min zoom, 1 at max zoom
-            const offsetMultiplier = 0.3 + scaleRatio * 2.2; // 0.3 at min zoom, 2.5 at max zoom
+            const offsetMultiplier = scaleRatio * scaleRatio * 2.5; // 0 at min zoom, 2.5 at max zoom (quadratic)
             const extraOffset = isRightmostColumns ? (tooltipWidth_map * offsetMultiplier) : 0;
             finalXOffset = -tooltipXOffset_map - tooltipWidth_map - extraOffset;
         }
 
         let finalYOffset = -50;
 
-        if (pointCenterY_screen + (tooltipHeight / 2) > viewportBottom) {
+        // For top rows (A1, A2) at max zoom, position tooltip below to avoid top edge
+        if (isTopRows && scale >= MAX_SCALE * 0.7) {
+            finalYOffset = 50; // Position below entity
+        }
+        else if (pointCenterY_screen + (tooltipHeight / 2) > viewportBottom) {
             finalYOffset = -100;
         }
         else if (pointCenterY_screen - (tooltipHeight / 2) < viewportTop) {
