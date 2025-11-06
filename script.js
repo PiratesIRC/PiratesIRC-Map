@@ -908,7 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Determine color based on entity type
                 const entityId = entity.id || '';
                 if (entityId.includes('ship')) {
-                    ctx.fillStyle = '#000000'; // Black for ships
+                    ctx.fillStyle = '#dc143c'; // Crimson for ships
                 } else if (entityId.includes('storm')) {
                     ctx.fillStyle = '#ffffff'; // White for storms
                 } else {
