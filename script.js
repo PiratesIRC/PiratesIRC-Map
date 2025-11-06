@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Force tooltip to the left for columns Q/R, or if it would go off screen
         if (isRightmostColumns || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
             // Add extra offset for rightmost columns to move tooltip significantly left
-            const extraOffset = isRightmostColumns ? (tooltipWidth_map * 0.5) : 0;
+            const extraOffset = isRightmostColumns ? (tooltipWidth_map * 1.5) : 0;
             finalXOffset = -tooltipXOffset_map - tooltipWidth_map - extraOffset;
         }
 

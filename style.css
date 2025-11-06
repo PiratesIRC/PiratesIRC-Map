@@ -680,7 +680,7 @@ html, body {
     border-radius: 5px;
     padding: 10px;
     box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
-    z-index: 12;
+    z-index: 100;
 
     /* transform is now set entirely by JS to include counter-scale */
 
@@ -720,7 +720,7 @@ html, body {
     border-radius: 4px;
     padding: 8px 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    z-index: 13;
+    z-index: 100;
     
     visibility: hidden;
     opacity: 0;
