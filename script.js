@@ -176,8 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get grid reference for this location
         const gridRef = getGridReference(mapX, mapY);
 
-        // Check if we're in columns Q or R (rightmost columns)
-        const isRightmostColumns = gridRef && (gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
+        // Check if we're in columns P, Q or R (rightmost columns)
+        const isRightmostColumns = gridRef && (gridRef.major.startsWith('P') || gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
 
         // Check if we're in rows 1 or 2 (top rows)
         const isRow1or2 = gridRef && (gridRef.major.endsWith('1') || gridRef.major.endsWith('2'));
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Calculate offset in map space (before transforms)
         const baseOffsetMap = baseOffsetScreen / scale;
-        const tooltipWidthMap = tooltipWidth / (scale * scale);
+        const tooltipWidthMap = tooltipWidth / scale;
 
         let finalXOffset = baseOffsetMap;
         let flipToLeft = false;
@@ -744,22 +744,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentMapWidth = MAP_WIDTH * scale;
         const currentMapHeight = MAP_HEIGHT * scale;
 
+        // Add 10% padding around all sides of the map
+        const paddingX = currentMapWidth * 0.1;
+        const paddingY = currentMapHeight * 0.1;
+
         let minX, maxX, minY, maxY;
 
         if (currentMapWidth < viewportWidth) {
-            minX = (viewportWidth - currentMapWidth) / 2;
-            maxX = minX;
+            minX = (viewportWidth - currentMapWidth) / 2 + paddingX;
+            maxX = minX - paddingX * 2;
         } else {
-            minX = viewportWidth - currentMapWidth;
-            maxX = 0;
+            minX = viewportWidth - currentMapWidth - paddingX;
+            maxX = paddingX;
         }
 
         if (currentMapHeight < viewportHeight) {
-            minY = (viewportHeight - currentMapHeight) / 2;
-            maxY = minY;
+            minY = (viewportHeight - currentMapHeight) / 2 + paddingY;
+            maxY = minY - paddingY * 2;
         } else {
-            minY = viewportHeight - currentMapHeight;
-            maxY = 0;
+            minY = viewportHeight - currentMapHeight - paddingY;
+            maxY = paddingY;
         }
 
         panX = Math.max(minX, Math.min(maxX, panX));
