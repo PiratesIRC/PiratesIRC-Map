@@ -1667,6 +1667,7 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         } else {
             document.querySelectorAll('.terrain-cell').forEach(cell => cell.remove());
         }
+        drawMiniMap();
     });
 
     // Prevent click-through to map from toolbar controls
