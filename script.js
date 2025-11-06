@@ -744,26 +744,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentMapWidth = MAP_WIDTH * scale;
         const currentMapHeight = MAP_HEIGHT * scale;
 
-        // Add 10% padding around all sides of the map
-        const paddingX = currentMapWidth * 0.1;
-        const paddingY = currentMapHeight * 0.1;
-
         let minX, maxX, minY, maxY;
 
         if (currentMapWidth < viewportWidth) {
-            minX = (viewportWidth - currentMapWidth) / 2 + paddingX;
-            maxX = minX - paddingX * 2;
+            minX = (viewportWidth - currentMapWidth) / 2;
+            maxX = minX;
         } else {
-            minX = viewportWidth - currentMapWidth - paddingX;
-            maxX = paddingX;
+            minX = viewportWidth - currentMapWidth;
+            maxX = 0;
         }
 
         if (currentMapHeight < viewportHeight) {
-            minY = (viewportHeight - currentMapHeight) / 2 + paddingY;
-            maxY = minY - paddingY * 2;
+            minY = (viewportHeight - currentMapHeight) / 2;
+            maxY = minY;
         } else {
-            minY = viewportHeight - currentMapHeight - paddingY;
-            maxY = paddingY;
+            minY = viewportHeight - currentMapHeight;
+            maxY = 0;
         }
 
         panX = Math.max(minX, Math.min(maxX, panX));
