@@ -255,8 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const pointCenterX_screen = rect.left + (rect.width / 2);
         const pointCenterY_screen = rect.top + (rect.height / 2);
 
-        const tooltipXOffset_screen = 15;
-        const tooltipXOffset_map = tooltipXOffset_screen / scale;
+        // Scale-aware base offset: smaller at max zoom (closer to entity), larger at min zoom
+        const baseOffsetScreen = 10 + (1 - (scale / MAX_SCALE)) * 5; // 10px at max zoom, ~15px at min zoom
+        const tooltipXOffset_map = baseOffsetScreen / scale;
         // Tooltip width needs to account for both counter-scaling and map scaling
         const tooltipWidth_map = tooltipWidth / (scale * scale);
 
@@ -264,9 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tooltipScreenWidth = tooltipWidth / scale;
         // Force tooltip to the left for columns Q/R, or if it would go off screen
-        if (isRightmostColumns || pointCenterX_screen + tooltipXOffset_screen + tooltipScreenWidth > viewportRight) {
-            // Add extra offset for rightmost columns to move tooltip significantly left
-            const extraOffset = isRightmostColumns ? (tooltipWidth_map * 1.5) : 0;
+        if (isRightmostColumns || pointCenterX_screen + baseOffsetScreen + tooltipScreenWidth > viewportRight) {
+            // Scale-aware extra offset multiplier: larger at max zoom, smaller at min zoom
+            const scaleRatio = (scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE); // 0 at min zoom, 1 at max zoom
+            const offsetMultiplier = 0.3 + scaleRatio * 2.2; // 0.3 at min zoom, 2.5 at max zoom
+            const extraOffset = isRightmostColumns ? (tooltipWidth_map * offsetMultiplier) : 0;
             finalXOffset = -tooltipXOffset_map - tooltipWidth_map - extraOffset;
         }
 
