@@ -176,8 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get grid reference for this location
         const gridRef = getGridReference(mapX, mapY);
 
-        // Check if we're in columns Q or R (rightmost columns, indices 16 and 17)
-        const isRightmostColumns = gridRef && (gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
+        // Check if we're in columns Q or R (rightmost columns)
+        const isColumnQorR = gridRef && (gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
+
+        // Check if we're in rows 1 or 2 (top rows)
+        const isRow1or2 = gridRef && (gridRef.major.endsWith('1') || gridRef.major.endsWith('2'));
 
         // Check if we're in top rows (A1, A2) for vertical positioning
         const isTopRows = gridRef && (gridRef.major.startsWith('A1') || gridRef.major.startsWith('A2'));
@@ -841,6 +844,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Mini-map Functions ---
+    // Helper function to get faction color for minimap
+    function getFactionColor(factionClass) {
+        const colorMap = {
+            'spain': '#ffff00',
+            'spanish': '#ffff00',
+            'england': '#ff0000',
+            'english': '#ff0000',
+            'netherlands': '#90ee90',
+            'dutch': '#90ee90',
+            'france': '#0000ff',
+            'french': '#0000ff',
+            'pirate': '#ffffff',
+            'native': '#D2691E',
+            'jesuit': '#0082ff',
+            'infected': '#8B0000',
+            'independent': '#ff00ff'
+        };
+        return colorMap[factionClass] || '#ffd700'; // Default gold
+    }
+
+    // Helper function to get entity type color for minimap
+    function getEntityTypeColor(entityId) {
+        // Check if entity has ship in its id
+        if (entityId && entityId.includes('ship-')) {
+            return '#00ff00'; // Green for ships
+        }
+        return '#ff00ff'; // Magenta for weather/other entities
+    }
+
     function drawMiniMap() {
         const ctx = miniMapCanvas.getContext('2d');
         const canvas = miniMapCanvas;
@@ -864,19 +896,21 @@ document.addEventListener('DOMContentLoaded', () => {
             (GRID_ROWS * CELL_HEIGHT) * scaleY
         );
 
-        // Draw ports as tiny dots if toggle is on
+        // Draw ports as tiny dots with faction colors if toggle is on
         if (togglePorts.checked) {
             document.querySelectorAll('.map-point').forEach(point => {
                 const x = parseFloat(point.style.left);
                 const y = parseFloat(point.style.top);
-                ctx.fillStyle = '#ffd700';
+                // Get faction class from element classes
+                const factionClass = Array.from(point.classList).find(cls => cls !== 'map-point');
+                ctx.fillStyle = getFactionColor(factionClass);
                 ctx.beginPath();
                 ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
 
-        // Draw entities as tiny dots if toggle is on
+        // Draw entities as tiny dots with type-based colors if toggle is on
         if (toggleEntities.checked) {
             document.querySelectorAll('.map-entity').forEach(entity => {
                 const x = parseFloat(entity.style.left);
@@ -896,6 +930,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
                 ctx.fill();
             });
+        }
+
+        // Draw coastal tiles if only terrain is selected (darker color)
+        if (toggleTerrain.checked && !togglePorts.checked && !toggleEntities.checked) {
+            ctx.fillStyle = '#8b6f47'; // Darker sandy/brown color for coastal tiles
+
+            // Iterate through terrain data to find coastal tiles
+            for (const [key, terrain] of Object.entries(terrainData)) {
+                if (terrain === 'both') {
+                    // Parse grid reference like "A1-3-2"
+                    const match = key.match(/^([A-R])(\d+)-(\d)-(\d)$/);
+                    if (match) {
+                        const [, colLetter, rowNum, subCol, subRow] = match;
+                        const majorCol = colLetter.charCodeAt(0) - 65; // A=0
+                        const majorRow = parseInt(rowNum) - 1; // Convert to 0-based
+                        const subColNum = parseInt(subCol);
+                        const subRowNum = parseInt(subRow);
+
+                        // Calculate pixel position
+                        const x = GRID_START_X + (majorCol * CELL_WIDTH) + ((subColNum - 0.5) / SUBGRID_DIVISIONS) * CELL_WIDTH;
+                        const y = GRID_START_Y + (majorRow * CELL_HEIGHT) + ((subRowNum - 0.5) / SUBGRID_DIVISIONS) * CELL_HEIGHT;
+
+                        // Draw dot on minimap
+                        ctx.beginPath();
+                        ctx.arc(x * scaleX, y * scaleY, 1, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
         }
 
         updateMiniMapViewport();
