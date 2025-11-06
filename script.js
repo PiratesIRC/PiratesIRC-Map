@@ -925,10 +925,13 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         // Draw terrain FIRST (as background layer) if terrain toggle is selected
+        // Only show coastal/both tiles on minimap
         if (toggleTerrain.checked) {
-            // Iterate through terrain data to draw all terrain types
+            ctx.fillStyle = '#D2B48C'; // Tan for coastal
+
+            // Iterate through terrain data to draw only coastal tiles
             for (const [key, terrain] of Object.entries(terrainData)) {
-                if (terrain && terrain !== 'unknown') {
+                if (terrain === 'both') {
                     // Parse grid reference like "A1-3-2"
                     const match = key.match(/^([A-R])(\d+)-(\d)-(\d)$/);
                     if (match) {
@@ -941,15 +944,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Calculate pixel position
                         const x = GRID_START_X + (majorCol * CELL_WIDTH) + ((subColNum - 0.5) / SUBGRID_DIVISIONS) * CELL_WIDTH;
                         const y = GRID_START_Y + (majorRow * CELL_HEIGHT) + ((subRowNum - 0.5) / SUBGRID_DIVISIONS) * CELL_HEIGHT;
-
-                        // Set color based on terrain type
-                        if (terrain === 'land') {
-                            ctx.fillStyle = '#228B22'; // Forest Green for land
-                        } else if (terrain === 'water') {
-                            ctx.fillStyle = '#4169E1'; // Royal Blue for water
-                        } else if (terrain === 'both') {
-                            ctx.fillStyle = '#D2B48C'; // Tan for coastal
-                        }
 
                         // Draw dot on minimap
                         ctx.beginPath();
