@@ -339,7 +339,7 @@ html, body {
 .independent .map-icon { fill: #ffffff; stroke: #ff00e7; stroke-width: 3px; }
 .french .map-icon { fill: #0000ff; stroke: #0000ff; stroke-width: 3px; }
 .france .map-icon { fill: #0000ff; stroke: #0000ff; stroke-width: 3px; }
-.pirate .map-icon { fill: #ffffff; stroke: #000000; stroke-width: 15px; }
+.pirate .map-icon { fill: #ffffff; stroke: #ffffff; stroke-width: 15px; }
 .native .map-icon { fill: #e09300; stroke: #e09300; stroke-width: 4px; }
 .jesuit .map-icon { fill: #ffffff; stroke: #0082ff; stroke-width: 4px; }
 .infected .map-icon { fill: #ff0000; stroke: #ff0000; stroke-width: 4px; }
@@ -354,7 +354,7 @@ html, body {
 .sidebar-icon.independent path { fill: #ffffff; stroke: #ff00e7; stroke-width: 2px; }
 .sidebar-icon.french path { fill: #0000ff; stroke: #0000ff; }
 .sidebar-icon.france path { fill: #0000ff; stroke: #0000ff; }
-.sidebar-icon.pirate path { fill: #ffffff; stroke: #000000; stroke-width: 2px; }
+.sidebar-icon.pirate path { fill: #ffffff; stroke: #ffffff; }
 .sidebar-icon.native path { fill: #D2691E; stroke: #D2691E; }
 .sidebar-icon.jesuit path { fill: #ffffff; stroke: #0082ff; stroke-width: 2px; }
 .sidebar-icon.infected path { fill: #ff0000; stroke: #ff0000; }
@@ -1230,7 +1230,7 @@ html, body {
 .legend-icon.english path { fill: #ff0000; stroke: #ff0000; }
 .legend-icon.french path { fill: #0000ff; stroke: #0000ff; }
 .legend-icon.dutch path { fill: #90ee90; stroke: #90ee90; }
-.legend-icon.pirate path { fill: #ffffff; stroke: #000000; stroke-width: 8px; }
+.legend-icon.pirate path { fill: #ffffff; stroke: #ffffff; stroke-width: 8px; }
 .legend-icon.native path { fill: #e09300; stroke: #e09300; stroke-width: 3px; }
 .legend-icon.jesuit path { fill: #ffffff; stroke: #0082ff; stroke-width: 3px; }
 .legend-icon.infected path { fill: #ff0000; stroke: #ff0000; stroke-width: 2px; }
