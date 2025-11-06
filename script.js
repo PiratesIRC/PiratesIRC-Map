@@ -260,27 +260,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // Scale-aware base offset: smaller at max zoom (closer to entity), larger at min zoom
         const baseOffsetScreen = 10 + (1 - (scale / MAX_SCALE)) * 5; // 10px at max zoom, ~15px at min zoom
 
-        // Work in screen space for positioning calculations
-        const tooltipScreenWidth = tooltipWidth / scale;
-        let finalXOffsetScreen = baseOffsetScreen;
+        // After counter-scaling, tooltip width on screen is just tooltipWidth (200px)
+        const tooltipScreenWidth = tooltipWidth;
+
+        // Calculate offset in map space (before transforms)
+        const baseOffsetMap = baseOffsetScreen / scale;
+        const tooltipWidthMap = tooltipWidth / (scale * scale);
+
+        let finalXOffset = baseOffsetMap;
 
         // Force tooltip to the left for columns Q/R, or if it would go off screen
         if (isRightmostColumns || pointCenterX_screen + baseOffsetScreen + tooltipScreenWidth > viewportRight) {
-            // Calculate left positioning in screen space
-            // Base: position to the left of entity
-            finalXOffsetScreen = -baseOffsetScreen - tooltipScreenWidth;
+            // Position to the left of entity
+            finalXOffset = -baseOffsetMap - tooltipWidthMap;
 
             // Scale-aware extra offset for rightmost columns only
             if (isRightmostColumns) {
                 const scaleRatio = (scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE); // 0 at min zoom, 1 at max zoom
                 const extraOffsetMultiplier = scaleRatio * scaleRatio * 2.5; // 0 at min zoom, 2.5 at max zoom (quadratic)
-                const extraOffsetScreen = tooltipScreenWidth * extraOffsetMultiplier;
-                finalXOffsetScreen -= extraOffsetScreen;
+                const extraOffsetMap = tooltipWidthMap * extraOffsetMultiplier;
+                finalXOffset -= extraOffsetMap;
             }
         }
-
-        // Convert final screen offset to map space
-        const finalXOffset = finalXOffsetScreen / scale;
 
         let finalYOffset = -50;
 
