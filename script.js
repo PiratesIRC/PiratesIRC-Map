@@ -924,43 +924,7 @@ document.addEventListener('DOMContentLoaded', () => {
             (GRID_ROWS * CELL_HEIGHT) * scaleY
         );
 
-        // Draw ports as tiny dots with faction colors if toggle is on
-        if (togglePorts.checked) {
-            document.querySelectorAll('.map-point').forEach(point => {
-                const x = parseFloat(point.style.left);
-                const y = parseFloat(point.style.top);
-                // Get faction class from element classes
-                const factionClass = Array.from(point.classList).find(cls => cls !== 'map-point');
-                ctx.fillStyle = getFactionColor(factionClass);
-                ctx.beginPath();
-                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        // Draw entities as tiny dots with type-based colors if toggle is on
-        if (toggleEntities.checked) {
-            document.querySelectorAll('.map-entity').forEach(entity => {
-                const x = parseFloat(entity.style.left);
-                const y = parseFloat(entity.style.top);
-
-                // Determine color based on entity type
-                const entityId = entity.id || '';
-                if (entityId.includes('ship')) {
-                    ctx.fillStyle = '#dc143c'; // Crimson for ships
-                } else if (entityId.includes('storm')) {
-                    ctx.fillStyle = '#ffffff'; // White for storms
-                } else {
-                    ctx.fillStyle = '#0ff'; // Cyan for other entities
-                }
-
-                ctx.beginPath();
-                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        // Draw terrain if terrain toggle is selected (regardless of other selections)
+        // Draw terrain FIRST (as background layer) if terrain toggle is selected
         if (toggleTerrain.checked) {
             // Iterate through terrain data to draw all terrain types
             for (const [key, terrain] of Object.entries(terrainData)) {
@@ -994,6 +958,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+        }
+
+        // Draw ports as tiny dots with faction colors if toggle is on (AFTER terrain)
+        if (togglePorts.checked) {
+            document.querySelectorAll('.map-point').forEach(point => {
+                const x = parseFloat(point.style.left);
+                const y = parseFloat(point.style.top);
+                // Get faction class from element classes
+                const factionClass = Array.from(point.classList).find(cls => cls !== 'map-point');
+                ctx.fillStyle = getFactionColor(factionClass);
+                ctx.beginPath();
+                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Draw entities as tiny dots with type-based colors if toggle is on (AFTER terrain)
+        if (toggleEntities.checked) {
+            document.querySelectorAll('.map-entity').forEach(entity => {
+                const x = parseFloat(entity.style.left);
+                const y = parseFloat(entity.style.top);
+
+                // Determine color based on entity type
+                const entityId = entity.id || '';
+                if (entityId.includes('ship')) {
+                    ctx.fillStyle = '#dc143c'; // Crimson for ships
+                } else if (entityId.includes('storm')) {
+                    ctx.fillStyle = '#ffffff'; // White for storms
+                } else {
+                    ctx.fillStyle = '#0ff'; // Cyan for other entities
+                }
+
+                ctx.beginPath();
+                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
         }
 
         updateMiniMapViewport();
