@@ -176,8 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get grid reference for this location
         const gridRef = getGridReference(mapX, mapY);
 
-        // Check if we're in columns Q or R (rightmost columns)
-        const isColumnQorR = gridRef && (gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
+        // Check if we're in columns P, Q or R (rightmost columns)
+        const isRightmostColumns = gridRef && (gridRef.major.startsWith('P') || gridRef.major.startsWith('Q') || gridRef.major.startsWith('R'));
 
         // Check if we're in rows 1 or 2 (top rows)
         const isRow1or2 = gridRef && (gridRef.major.endsWith('1') || gridRef.major.endsWith('2'));
@@ -252,6 +252,10 @@ document.addEventListener('DOMContentLoaded', () => {
         mapTooltip.style.left = mapX + 'px';
         mapTooltip.style.top = mapY + 'px';
 
+        // Define GUI element boundaries
+        const HELP_BUTTON_SIZE = 80; // Help button area (top-right)
+        const TOOLBAR_MARGIN = 100; // Approximate toolbar height + margin
+
         const viewportLeft = SIDEBAR_WIDTH;
         const viewportRight = window.innerWidth;
         const viewportTop = 0;
@@ -260,43 +264,67 @@ document.addEventListener('DOMContentLoaded', () => {
         const pointCenterX_screen = rect.left + (rect.width / 2);
         const pointCenterY_screen = rect.top + (rect.height / 2);
 
-        // Scale-aware base offset: smaller at max zoom (closer to entity), larger at min zoom
-        const baseOffsetScreen = 10 + (1 - (scale / MAX_SCALE)) * 5; // 10px at max zoom, ~15px at min zoom
+        // Scale-aware base offset: increases with zoom for better readability
+        // At min zoom (0.25): ~20px, at max zoom (5): ~12px
+        const scaleRatio = (scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE);
+        const baseOffsetScreen = 20 - (scaleRatio * 8); // Ranges from 20px to 12px
 
         // After counter-scaling, tooltip width on screen is just tooltipWidth (200px)
         const tooltipScreenWidth = tooltipWidth;
+        const tooltipScreenHeight = tooltipHeight / scale;
 
         // Calculate offset in map space (before transforms)
         const baseOffsetMap = baseOffsetScreen / scale;
-        const tooltipWidthMap = tooltipWidth / (scale * scale);
+        const tooltipWidthMap = tooltipWidth / scale;
 
         let finalXOffset = baseOffsetMap;
+        let flipToLeft = false;
 
-        // Force tooltip to the left for columns Q/R, or if it would go off screen
-        if (isRightmostColumns || pointCenterX_screen + baseOffsetScreen + tooltipScreenWidth > viewportRight) {
+        // Check if tooltip would collide with right edge, toolbar, or help button
+        const wouldHitRightEdge = pointCenterX_screen + baseOffsetScreen + tooltipScreenWidth > viewportRight - 30;
+        const wouldHitHelpButton = pointCenterY_screen < HELP_BUTTON_SIZE &&
+                                   pointCenterX_screen + baseOffsetScreen + tooltipScreenWidth > viewportRight - HELP_BUTTON_SIZE;
+
+        // Force tooltip to the left for columns Q/R, or if it would collide with GUI elements
+        if (isRightmostColumns || wouldHitRightEdge || wouldHitHelpButton) {
+            flipToLeft = true;
             // Position to the left of entity
             finalXOffset = -baseOffsetMap - tooltipWidthMap;
 
             // Scale-aware extra offset for rightmost columns only
             if (isRightmostColumns) {
-                const scaleRatio = (scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE); // 0 at min zoom, 1 at max zoom
                 const extraOffsetMultiplier = scaleRatio * scaleRatio * 2.5; // 0 at min zoom, 2.5 at max zoom (quadratic)
                 const extraOffsetMap = tooltipWidthMap * extraOffsetMultiplier;
                 finalXOffset -= extraOffsetMap;
             }
         }
 
+        // If flipped to left, ensure it doesn't go past the left sidebar
+        if (flipToLeft && pointCenterX_screen + finalXOffset * scale < viewportLeft + 10) {
+            // Reposition to the right if it would go behind sidebar
+            finalXOffset = baseOffsetMap;
+        }
+
         let finalYOffset = -50;
 
-        // For top rows (A1, A2) at max zoom, position tooltip below to avoid top edge
+        // Calculate vertical boundaries considering GUI elements
+        const topBoundary = viewportTop + 10;
+        const bottomBoundary = viewportBottom - TOOLBAR_MARGIN;
+
+        // Check if tooltip would hit bottom toolbar
+        const wouldHitToolbar = pointCenterY_screen + (tooltipScreenHeight / 2) > bottomBoundary;
+
+        // For top rows (A1, A2) at high zoom, position tooltip below to avoid top edge
         if (isTopRows && scale >= MAX_SCALE * 0.7) {
             finalYOffset = 50; // Position below entity
         }
-        else if (pointCenterY_screen + (tooltipHeight / 2) > viewportBottom) {
-            finalYOffset = -100;
+        // If tooltip would hit bottom toolbar or bottom edge
+        else if (wouldHitToolbar || pointCenterY_screen + (tooltipScreenHeight / 2) > viewportBottom - 10) {
+            finalYOffset = -100; // Position above entity
         }
-        else if (pointCenterY_screen - (tooltipHeight / 2) < viewportTop) {
-            finalYOffset = 0;
+        // If tooltip would hit top edge
+        else if (pointCenterY_screen - (tooltipScreenHeight / 2) < topBoundary) {
+            finalYOffset = 0; // Position at entity level
         }
 
         mapTooltip.style.transform = `translate(${finalXOffset}px, ${finalYOffset}%) scale(${1 / scale})`;
@@ -896,47 +924,12 @@ document.addEventListener('DOMContentLoaded', () => {
             (GRID_ROWS * CELL_HEIGHT) * scaleY
         );
 
-        // Draw ports as tiny dots with faction colors if toggle is on
-        if (togglePorts.checked) {
-            document.querySelectorAll('.map-point').forEach(point => {
-                const x = parseFloat(point.style.left);
-                const y = parseFloat(point.style.top);
-                // Get faction class from element classes
-                const factionClass = Array.from(point.classList).find(cls => cls !== 'map-point');
-                ctx.fillStyle = getFactionColor(factionClass);
-                ctx.beginPath();
-                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
+        // Draw terrain FIRST (as background layer) if terrain toggle is selected
+        // Only show coastal/both tiles on minimap
+        if (toggleTerrain.checked) {
+            ctx.fillStyle = '#D2B48C'; // Tan for coastal
 
-        // Draw entities as tiny dots with type-based colors if toggle is on
-        if (toggleEntities.checked) {
-            document.querySelectorAll('.map-entity').forEach(entity => {
-                const x = parseFloat(entity.style.left);
-                const y = parseFloat(entity.style.top);
-
-                // Determine color based on entity type
-                const entityId = entity.id || '';
-                if (entityId.includes('ship')) {
-                    ctx.fillStyle = '#dc143c'; // Crimson for ships
-                } else if (entityId.includes('storm')) {
-                    ctx.fillStyle = '#ffffff'; // White for storms
-                } else {
-                    ctx.fillStyle = '#0ff'; // Cyan for other entities
-                }
-
-                ctx.beginPath();
-                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        // Draw coastal tiles if only terrain is selected (darker color)
-        if (toggleTerrain.checked && !togglePorts.checked && !toggleEntities.checked) {
-            ctx.fillStyle = '#8b6f47'; // Darker sandy/brown color for coastal tiles
-
-            // Iterate through terrain data to find coastal tiles
+            // Iterate through terrain data to draw only coastal tiles
             for (const [key, terrain] of Object.entries(terrainData)) {
                 if (terrain === 'both') {
                     // Parse grid reference like "A1-3-2"
@@ -959,6 +952,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+        }
+
+        // Draw ports as tiny dots with faction colors if toggle is on (AFTER terrain)
+        if (togglePorts.checked) {
+            document.querySelectorAll('.map-point').forEach(point => {
+                const x = parseFloat(point.style.left);
+                const y = parseFloat(point.style.top);
+                // Get faction class from element classes
+                const factionClass = Array.from(point.classList).find(cls => cls !== 'map-point');
+                ctx.fillStyle = getFactionColor(factionClass);
+                ctx.beginPath();
+                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Draw entities as tiny dots with type-based colors if toggle is on (AFTER terrain)
+        if (toggleEntities.checked) {
+            document.querySelectorAll('.map-entity').forEach(entity => {
+                const x = parseFloat(entity.style.left);
+                const y = parseFloat(entity.style.top);
+
+                // Determine color based on entity type
+                const entityId = entity.id || '';
+                if (entityId.includes('ship')) {
+                    ctx.fillStyle = '#dc143c'; // Crimson for ships
+                } else if (entityId.includes('storm')) {
+                    ctx.fillStyle = '#ffffff'; // White for storms
+                } else {
+                    ctx.fillStyle = '#0ff'; // Cyan for other entities
+                }
+
+                ctx.beginPath();
+                ctx.arc(x * scaleX, y * scaleY, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
         }
 
         updateMiniMapViewport();
@@ -1632,6 +1661,7 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
         } else {
             document.querySelectorAll('.terrain-cell').forEach(cell => cell.remove());
         }
+        drawMiniMap();
     });
 
     // Prevent click-through to map from toolbar controls
