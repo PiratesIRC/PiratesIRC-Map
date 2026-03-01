@@ -662,18 +662,18 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i <= GRID_COLS; i++) {
             const line = document.createElement('div');
             line.className = 'map-grid-line vertical-line major-grid';
-            line.style.left = (i * CELL_WIDTH) + GRID_START_X + 'px';
+            line.style.left = Math.round(i * CELL_WIDTH + GRID_START_X) + 'px';
             line.style.top = GRID_START_Y + 'px';
-            line.style.height = gridTotalHeight + 'px';
+            line.style.height = Math.round(gridTotalHeight) + 'px';
             mapContainer.appendChild(line);
         }
 
         for (let i = 0; i <= GRID_ROWS; i++) {
             const line = document.createElement('div');
             line.className = 'map-grid-line horizontal-line major-grid';
-            line.style.top = (i * CELL_HEIGHT) + GRID_START_Y + 'px';
+            line.style.top = Math.round(i * CELL_HEIGHT + GRID_START_Y) + 'px';
             line.style.left = GRID_START_X + 'px';
-            line.style.width = gridTotalWidth + 'px';
+            line.style.width = Math.round(gridTotalWidth) + 'px';
             mapContainer.appendChild(line);
         }
     }
@@ -695,9 +695,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (let i = 1; i < SUBGRID_DIVISIONS; i++) {
                     const line = document.createElement('div');
                     line.className = 'map-grid-line vertical-line sub-grid-line';
-                    line.style.left = cellX + (i * subCellWidth) + 'px';
-                    line.style.top = cellY + 'px';
-                    line.style.height = CELL_HEIGHT + 'px';
+                    line.style.left = Math.round(cellX + (i * subCellWidth)) + 'px';
+                    line.style.top = Math.round(cellY) + 'px';
+                    line.style.height = Math.round(CELL_HEIGHT) + 'px';
                     mapContainer.appendChild(line);
                 }
 
@@ -705,9 +705,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (let i = 1; i < SUBGRID_DIVISIONS; i++) {
                     const line = document.createElement('div');
                     line.className = 'map-grid-line horizontal-line sub-grid-line';
-                    line.style.top = cellY + (i * subCellHeight) + 'px';
-                    line.style.left = cellX + 'px';
-                    line.style.width = CELL_WIDTH + 'px';
+                    line.style.top = Math.round(cellY + (i * subCellHeight)) + 'px';
+                    line.style.left = Math.round(cellX) + 'px';
+                    line.style.width = Math.round(CELL_WIDTH) + 'px';
                     mapContainer.appendChild(line);
                 }
             }
@@ -802,6 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update sub-grid visibility
         updateSubGridVisibility();
 
+        mapContainer.style.setProperty('--map-scale', scale);
         mapContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
 
         // Update mini-map and current location
@@ -1149,6 +1150,7 @@ But inside? No gold. Just one soggy scrap of parchment. And on it, in Malone's o
     initialPanX = panX;
     initialPanY = panY;
 
+    mapContainer.style.setProperty('--map-scale', scale);
     createGridLines();
     loadAllData();
 

@@ -316,13 +316,15 @@ html, body {
 }
 
 .map-grid-line.vertical-line {
-    width: 1px;
+    /* Counter-scale thickness so lines always appear as 1px regardless of zoom */
+    width: calc(1px / var(--map-scale, 1));
     /* height is set by JS */
     /* top is set by JS */
 }
 
 .map-grid-line.horizontal-line {
-    height: 1px;
+    /* Counter-scale thickness so lines always appear as 1px regardless of zoom */
+    height: calc(1px / var(--map-scale, 1));
     /* width is set by JS */
     /* left is set by JS */
 }
